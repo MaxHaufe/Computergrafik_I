@@ -25,7 +25,7 @@
 #include "Circle.h"
 
 #define DIFFUSE_LIGHTNING 1
-#define PLANETS 0
+#define PLANETS 1
 
 #define CORE 1
 #define ELECTRONS 1
@@ -190,8 +190,8 @@ void Planets() {
 	sphere->Model = Model;
 	sphere->Projection = Projection;
 	sphere->View = View;
-	sphere->material.shininess = 3.0f;
-	sphere->material.diffuse = vec3(0.9f, 0.9f, 0.9f);
+	//sphere->material.shininess = 3.0f;
+	//sphere->material.diffuse = vec3(0.9f, 0.9f, 0.9f);
 	sphere->draw();
 	glFlush();
 }
