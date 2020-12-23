@@ -73,16 +73,18 @@ void init(void) {
 	printf("\n%s\n", (char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
 	program = loadShaders("beleg.vs", "beleg.fs", "", "", "", "");
 
-	// Enable depth test
-	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS);
-	//glDepthFunc(GL_ALWAYS);
+
 
 	//generate Buffers
 	glUseProgram(program);
 	glGenBuffers(NumBuffers, Buffers);
 	glGenVertexArrays(NumVAOs, VAO);
+	
+	// Enable depth test
+	glEnable(GL_DEPTH_TEST);
+	// Accept fragment if it closer to the camera than the former one
+	glDepthFunc(GL_LESS);
+	glFlush();
 }
 
 Cube* cube = new Cube();
@@ -96,6 +98,7 @@ Circle* earthOrbit = new Circle();
 Circle* moonOrbit = new Circle();
 
 void Planets() {
+
 	vec3 viewPos(0.0f, 3.5f, 10.0f);
 
 	sphere->setViewPos(viewPos);
@@ -114,8 +117,8 @@ void Planets() {
 
 	glViewport(0, 0, width, height);
 
-	//Projection = ortho(-2.0f, 2.0f, -2.0f, 2.0f, -5.0f, 20.0f);										//GEHT AUCH
-	Projection = frustum(-5.f, 5.f, -5.f, 5.f, 5.0f, 20.0f);												//FUNKTIONIERT !!!!!!!!!!!
+	//Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -5.0f, 20.0f);									//GEHT AUCH
+	Projection = frustum(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 25.0f);												//FUNKTIONIERT !!!!!!!!!!!
 	float aspect = (float)width / (float)height;
 	//Projection = ortho(-aspect, aspect,(float) -1, (float)1, (float)-1, (float)1); // geht glaub
 	//Projection = glm::perspective(aspect, 1.0f, 3.5f, -0.5f);	//EINFACH MAL NCIHT MACHEN
@@ -155,11 +158,8 @@ void Planets() {
 	Model = ModelR * ModelS;
 	earthOrbit->Model = Model;
 
-	//important to draw ALL orbits before ALL spheres, because the orbit does NOT have a z-value due to it being a 2D shape -> Depth Buffering does not apply
-	//I know that this is a bad style but I can't be bothered to change it because it works :^)
-
 	//draw it
-	earthOrbit->draw();
+	earthOrbit->draw(false, GL_LINES);
 	sphere->draw();
 	//moon
 
@@ -187,15 +187,17 @@ void Planets() {
 	Model = ModelT * ModelR *ModelS;
 	moonOrbit->Model = Model;
 
-	//draw them, make sure to draw orbit before the sphere
-	moonOrbit->draw();
+	//draw them, make sure to draw orbits before spheres
+	moonOrbit->setColor(vec3(153, 102, 255));
+	moonOrbit->draw(false, GL_LINES);
+
 	sphereColorful->draw();
+
 	//sun
 
 	Model = mat4(1.0);
 	sphere->Model = Model;
 	sphere->draw();
-	glFlush();
 }
 
 void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND Sphere* sphere = new Sphere(1, 30, 30); are required; Sphere Parameters do not matter, as long as Radius equals 1
@@ -389,13 +391,15 @@ void display(void) {
 	glClearColor(0.5, 0., 0.5, 0);
 	//glClearColor(0.0, 0.0, 0.0,0);
 
-	vec3 viewPos(0.0f, 0.0f, 10.0f);
+
+
+	vec3 viewPos(0.0f, 0.0f, 10.0f);		
 
 	if (DIFFUSE_LIGHTNING) {
 		//vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
 		vec3 LightColor = vec3(0.5f, 0.5f, 0.5f);
 		//vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
-		vec3 LightPosition = vec3(10.0f, 0.0f, 10.0f);
+		vec3 LightPosition = vec3(0.0f, 0.0f, -10.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
 		//vec3 LightPosition = viewPos;
 
 		GLuint locColor = glGetUniformLocation(program, "LightColor");
@@ -460,7 +464,7 @@ void reshape(int w, int h) {
 
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(1080, 1080);
 	glutInitContextVersion(4, 5);  // (4,2) (3,3);
 	glutInitContextProfile(GLUT_CORE_PROFILE);

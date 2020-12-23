@@ -71,6 +71,10 @@ void Shape::draw(bool filled, GLuint drawingMode) {
 	}
 
 	glDrawArrays(drawingMode, 0, this->vertices.size() / 3);
+
+	//unbind everything - troubleshooting
+	//helped fixing the issue of the depth buffer acting weird
+	glDisableVertexArrayAttrib(VAOCube, vPosition);
 }
 
 void Shape::setColor(glm::vec3 color) {

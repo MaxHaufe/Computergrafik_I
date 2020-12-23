@@ -22,9 +22,9 @@ public:
 	glm::mat4 Projection = glm::mat4(1.0f);
 
 	struct Material {
-		glm::vec3 ambient = glm::vec3(0.2f, 0.2f, 0.2f);
-		glm::vec3 diffuse = glm::vec3(0.8f, 0.8f, 0.8f);
-		float shininess = 56.0f;
+		glm::vec3 ambient = glm::vec3(0.1f, 0.1f, 0.1f);
+		glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+		float shininess = 50.0f;
 	};
 
 	Material material;
