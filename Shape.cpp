@@ -9,7 +9,7 @@ void Shape::pushMatrices() {
 	this->View = glm::lookAt(this->getViewPos(),this->getViewDir(),this->getViewUp());
 
 	//uniform eye direc
-	vec3 EyeDirection = viewPos - target;
+	glm::vec3 EyeDirection = this->getViewPos() - this->getViewDir();
 	GLuint locColor = glGetUniformLocation(program, "EyeDirection");
 
 	glUniform3fv(locColor, 1, &EyeDirection[0]);

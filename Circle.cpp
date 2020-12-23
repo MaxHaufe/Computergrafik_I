@@ -1,4 +1,5 @@
 #include "Circle.h"
+#include <gtx/transform.hpp>
 #include "GlobalVariables.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -26,6 +27,14 @@ Circle::Circle(float radius, unsigned int segments) {
 }
 
 void Circle::pushMatrices() {
+
+	this->View = glm::lookAt(this->getViewPos(), this->getViewDir(), this->getViewUp());
+
+	//uniform eye direc
+	glm::vec3 EyeDirection = this->getViewPos() - this->getViewDir();
+	GLuint locColor = glGetUniformLocation(program, "EyeDirection");
+
+	glUniform3fv(locColor, 1, &EyeDirection[0]);
 
 	glm::mat3 NormalMatrix;
 	glm::mat4 ModelView;

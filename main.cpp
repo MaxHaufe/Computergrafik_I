@@ -26,7 +26,8 @@
 #include "Circle.h"
 
 #define DIFFUSE_LIGHTNING 1
-#define PLANETS 0
+#define PLANETS 1
+#define CARBONATOM 0
 
 #define CORE 1
 #define ELECTRONS 1
@@ -76,6 +77,7 @@ void init(void) {
 	glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
+	//glDepthFunc(GL_ALWAYS);
 
 	//generate Buffers
 	glUseProgram(program);
@@ -90,12 +92,18 @@ Sphere* sphereColorful = new Sphere(1, 30, 30, false, true);
 Sphere* sphereFunny = new Sphere(1, 30, 30, true);
 
 Circle* electronShell = new Circle();
+Circle* earthOrbit = new Circle();
+Circle* moonOrbit = new Circle();
 
 void Planets() {
-	vec3 viewPos(0.0f, 5.5f, 10.0f);
+	vec3 viewPos(0.0f, 3.5f, 10.0f);
+
+	sphere->setViewPos(viewPos);
+	sphereColorful->setViewPos(viewPos);
+	earthOrbit->setViewPos(viewPos);
+	moonOrbit->setViewPos(viewPos);
 
 	mat4 Projection = mat4(1.0);
-	mat4 View = mat4(1.0);
 	mat4 Model = mat4(1.0);
 	mat4 ModelR = mat4(1.0);
 	mat4 ModelT = mat4(1.0);
@@ -107,25 +115,17 @@ void Planets() {
 	glViewport(0, 0, width, height);
 
 	//Projection = ortho(-2.0f, 2.0f, -2.0f, 2.0f, -5.0f, 20.0f);										//GEHT AUCH
-	Projection = frustum(-2.f, 2.f, -2.f, 2.f, 2.0f, -2.0f);												//FUNKTIONIERT !!!!!!!!!!!
+	Projection = frustum(-5.f, 5.f, -5.f, 5.f, 5.0f, 20.0f);												//FUNKTIONIERT !!!!!!!!!!!
 	float aspect = (float)width / (float)height;
 	//Projection = ortho(-aspect, aspect,(float) -1, (float)1, (float)-1, (float)1); // geht glaub
 	//Projection = glm::perspective(aspect, 1.0f, 3.5f, -0.5f);	//EINFACH MAL NCIHT MACHEN
-	View = lookAt(viewPos, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
 
-	//1
-	ModelR = rotate(ModelR, rotationAngle, vec3(1.0, 1.0, 1.0));
-	ModelT = translate(ModelT, vec3(3, 0, 3));
-	Model = ModelT * ModelR;
+	sphere->Projection = Projection;
+	sphereColorful->Projection = Projection;
+	earthOrbit->Projection = Projection;
+	moonOrbit->Projection = Projection;
 
-
-	cube->Model = Model;
-	cube->Projection = Projection;
-	cube->View = View;
-
-	//cube->draw();
-
-	//2
+	//earth
 
 	Model = mat4(1.0);
 	ModelR = mat4(1.0);
@@ -134,65 +134,66 @@ void Planets() {
 	ModelT2 = mat4(1.0f);
 	ModelT3 = mat4(1.0f);
 
-	float xRotate, yRotate, zRotate;
-	xRotate = 2;
-	yRotate = 0;
-	zRotate = 2;
 
-	ModelR = rotate(ModelR, -rotationAngle, vec3(0.0, 1.0, 0.0));
-	ModelT = translate(ModelT, vec3(xRotate, yRotate, zRotate));
-	ModelS = scale(ModelS, vec3(0.5f, 0.5f, 0.5f));
-	//Model = ModelT * ModelR;		//verschieben, dann rotate
-	//Model = ModelR * ModelT;		// rotate um objekt
+	//calculate earth and its rotation
+	float orbitRadius = 4;
+	float xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
+	float earthOrbitVal = xzOrbitValue;		//for the translation of the moon orbit
+
+	ModelR = rotate(mat4(1.0), -rotationAngle, vec3(0.0, 1.0, 0.0));
+	ModelT = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
+	ModelS = scale(mat4(1.0), vec3(0.5f, 0.5f, 0.5f));
 	Model = ModelR * ModelT * ModelS;
 
 	sphere->Model = Model;
-	sphere->Projection = Projection;
-	sphere->View = View;
-	sphere->draw();
 
+
+	//calculate earth orbit
+	ModelT = translate(mat4(1.0f), vec3(0.0f, 0.0f, -1.0f));
+	ModelS = scale(mat4(1.0f), vec3(orbitRadius, orbitRadius, 0));
+	ModelR = rotate(mat4(1.0f), (float)M_PI / 2, vec3(1.0f, 0.0f, 0.0f));		//rotate to fit x-z axis
+	Model = ModelR * ModelS;
+	earthOrbit->Model = Model;
+
+	//important to draw ALL orbits before ALL spheres, because the orbit does NOT have a z-value due to it being a 2D shape -> Depth Buffering does not apply
+	//I know that this is a bad style but I can't be bothered to change it because it works :^)
+
+	//draw it
+	earthOrbit->draw();
+	sphere->draw();
 	//moon
 
-	Model = mat4(1.0);
-	ModelR = mat4(1.0);
-	ModelT = mat4(1.0);
-	ModelS = mat4(1.0f);
-	ModelT2 = mat4(1.0f);
-	ModelT3 = mat4(1.0f);
-	ModelT4 = mat4(1.0f);
+	//calculate moon and its rotation
+	orbitRadius = 1.5f;
+	xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
 
-	float xEarth, zEarth;
-	xEarth = xRotate * cosf(rotationAngle) - zRotate * sinf(rotationAngle);
-	zEarth = xRotate * sinf(rotationAngle) + zRotate * cosf(rotationAngle);
+	float xEarth, zEarth;			//translate center of rotation to earth's current point
+	xEarth = earthOrbitVal * cosf(rotationAngle) - earthOrbitVal * sinf(rotationAngle);
+	zEarth = earthOrbitVal * sinf(rotationAngle) + earthOrbitVal * cosf(rotationAngle);
 
-	ModelR = rotate(ModelR, 5 * rotationAngle, vec3(0.0, 1.0, 0.0f));
-	ModelS = scale(ModelS, vec3(0.2f, 0.2f, 0.2f));
-	ModelT = translate(ModelT, vec3(xEarth, 0.0, zEarth));
-	ModelT2 = translate(ModelT2, vec3(1, 0.0, 0));
+	ModelR = rotate(mat4(1.0), 5 * rotationAngle, vec3(0.0, 1.0, 0.0f));
+	ModelS = scale(mat4(1.0), vec3(0.2f, 0.2f, 0.2f));
+	ModelT = translate(mat4(1.0), vec3(xEarth, 0.0, zEarth));
+	ModelT2 = translate(mat4(1.0), vec3(1, 0.0, 1));
 
-	Model = ModelT * ModelR * ModelT2 * ModelS;		//DER HEILIGE GRAL	
+	Model = ModelT * ModelR * ModelT2 * ModelS;		
 
 	sphereColorful->Model = Model;
-	sphereColorful->Projection = Projection;
-	sphereColorful->View = View;
-	sphereColorful->draw();
 
-	//sphere
+	//calculate moon orbit
+	ModelT = translate(mat4(1.0f), vec3(xEarth, 0.0, zEarth));		//fit rotation centre to earths current pos
+	ModelS = scale(mat4(1.0f), vec3(orbitRadius, orbitRadius, 0));
+	ModelR = rotate(mat4(1.0f), (float)M_PI / 2, vec3(1.0f, 0.0f, 0.0f));
+	Model = ModelT * ModelR *ModelS;
+	moonOrbit->Model = Model;
+
+	//draw them, make sure to draw orbit before the sphere
+	moonOrbit->draw();
+	sphereColorful->draw();
+	//sun
 
 	Model = mat4(1.0);
-	ModelR = mat4(1.0);
-	ModelT = mat4(1.0);
-	ModelS = mat4(1.0f);
-
-	ModelR = rotate(ModelR, -rotationAngle * 2, vec3(1, 1, 1));
-	ModelS = scale(ModelS, vec3(0.5f, 0.5f, 0.5f));
-	//ModelT = translate(ModelT, vec3(0, 0.0, 0));
-	Model = ModelT;
 	sphere->Model = Model;
-	sphere->Projection = Projection;
-	sphere->View = View;
-	//sphere->material.shininess = 3.0f;
-	//sphere->material.diffuse = vec3(0.9f, 0.9f, 0.9f);
 	sphere->draw();
 	glFlush();
 }
@@ -209,7 +210,6 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 	vec3 target(0.0f, 0.0f, 0.0f);
 
 	mat4 Projection = mat4(1.0);
-	mat4 View = mat4(1.0);
 	mat4 Model = mat4(1.0);
 	mat4 ModelR = mat4(1.0);
 	mat4 ModelR2 = mat4(1.0f);
@@ -219,19 +219,10 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 	glViewport(0, 0, width, height);
 
 	Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 15.0f);
-	View = lookAt(viewPos, target, vec3(0.0f, 1.0f, 0.0f));
-
-	//temporary eydirection uniform
-	vec3 EyeDirection = viewPos - target;
-	GLuint locColor = glGetUniformLocation(program, "EyeDirection");
-
-	glUniform3fv(locColor, 1, &EyeDirection[0]);
 
 	//draw the core, i.e. neutrons and protons
 	if (CORE) {	
-
 		sphere->Projection = Projection;
-		sphere->View = View;
 		ModelS = scale(ModelS, vec3(0.3f, 0.3f, 0.3f));
 
 		vec3 red = vec3(1.0f, 0.0f, 0.0f);
@@ -327,7 +318,6 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 	//draw Shells
 	float electronShellAngle = 3 * M_PI / 7;		//rotate circle on xz to make it elliptic
 	float electronShellAngleY = M_PI / 6;			//rotating increment to make 6 shells
-	electronShell->View = View;
 	electronShell->Projection = Projection;
 
 	ModelS = mat4(1.0);
@@ -359,7 +349,6 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 	sphere->setColor(vec3(51.0f / 255.0f, 51.0f / 255.0f, 255.0f / 255.0f));		//darker blue for electrons
 
 	sphere->Projection = Projection;
-	sphere->View = View;
 
 	ModelS = scale(ModelS, vec3(0.3f, 0.3f, 0.3f));		//match the size of protons and neutrons
 
@@ -397,7 +386,8 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 void display(void) {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.5, 0, 0.5, 0);
+	glClearColor(0.5, 0., 0.5, 0);
+	//glClearColor(0.0, 0.0, 0.0,0);
 
 	vec3 viewPos(0.0f, 0.0f, 10.0f);
 
@@ -434,7 +424,6 @@ void display(void) {
 
 
 	mat4 Projection = mat4(1.0);
-	mat4 View = mat4(1.0);
 	mat4 Model = mat4(1.0);
 	mat4 ModelR = mat4(1.0);
 	mat4 ModelR2 = mat4(1.0f);
@@ -451,9 +440,10 @@ void display(void) {
 	float aspect = (float)width / (float)height;
 	//Projection = ortho(3*-aspect,3* aspect,(float) -3, (float)3, (float)3, (float)-3); // geht glaub
 	//Projection = glm::perspective(aspect, 1.0f, 3.5f, -0.5f);	//EINFACH MAL NCIHT MACHEN
-	View = lookAt(viewPos, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
 	
-	CarbonAtom();
+	if (CARBONATOM) {
+		CarbonAtom();
+	}
 
 	//Planets lol
 	if (PLANETS) {

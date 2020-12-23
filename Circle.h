@@ -3,12 +3,13 @@
 #include <glm.hpp>
 #include <glew.h>
 #include <vector>
+#include "Camera.h"
 #include "Shape.h"
 
 #ifndef CIRCLE_H
 #define CIRCLE_H
 
-class Circle {
+class Circle : public Camera{
 private:
 	std::vector<GLfloat> vertices;
 	std::vector<GLfloat> colors;

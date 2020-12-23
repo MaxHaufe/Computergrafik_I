@@ -38,7 +38,6 @@ Sphere::Sphere(float radius, unsigned int stackCount, unsigned int sectorCount, 
 			z4 = xy2 * cosf(sectorAngle2);			
 			x4 = xy2 * sinf(sectorAngle2);
 
-
 			this->vertices.push_back(x);
 			this->vertices.push_back(y);
 			this->vertices.push_back(z);
