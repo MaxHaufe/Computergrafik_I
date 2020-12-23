@@ -1,0 +1,14 @@
+*
+!Circle.h
+!Cube.h
+!GlobalVariables.h
+!Shape.h
+!Sphere.h
+!beleg.fs
+!beleg.vs
+!Circle.cpp
+!Cube.cpp
+!LoadShader.cpp
+!main.cpp
+!Shape.cpp
+!Sphere.cpp
