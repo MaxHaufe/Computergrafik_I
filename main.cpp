@@ -19,13 +19,14 @@
 
 #include <vector>
 
+#include "Camera.h"
 #include "Shape.h"
 #include "Cube.h"
 #include "Sphere.h"
 #include "Circle.h"
 
 #define DIFFUSE_LIGHTNING 1
-#define PLANETS 1
+#define PLANETS 0
 
 #define CORE 1
 #define ELECTRONS 1
@@ -217,7 +218,7 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 
 	glViewport(0, 0, width, height);
 
-	Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 20.0f);
+	Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 15.0f);
 	View = lookAt(viewPos, target, vec3(0.0f, 1.0f, 0.0f));
 
 	//temporary eydirection uniform
@@ -370,7 +371,7 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 
 			ModelT = translate(ModelT, vec3(4, 0, 0));								//hardcoded, adjust to fit ModelS of shells
 			if (RANDOMELECTRONS) {															//added offset to rotation angle in order to de-synchronize them
-				ModelR = rotate(ModelR,  rotationAngle + i, vec3(0.0, 0.0, 1.0f));		//translate and rotate, to rotate z-axis
+				ModelR = rotate(ModelR, 4 * rotationAngle + i, vec3(0.0, 0.0, 1.0f));		//translate and rotate, to rotate z-axis
 			}
 			else																			
 			{

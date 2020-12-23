@@ -1,9 +1,18 @@
 //#include "GlobalVariables.h"
 #include "Shape.h"
+#include <gtx/transform.hpp>
 #include "GlobalVariables.h"
 
 
 void Shape::pushMatrices() {
+
+	this->View = glm::lookAt(this->getViewPos(),this->getViewDir(),this->getViewUp());
+
+	//uniform eye direc
+	vec3 EyeDirection = viewPos - target;
+	GLuint locColor = glGetUniformLocation(program, "EyeDirection");
+
+	glUniform3fv(locColor, 1, &EyeDirection[0]);
 
 	glm::mat3 NormalMatrix;
 	glm::mat4 ModelView;

@@ -4,17 +4,20 @@
 #include <glew.h>
 #include <vector>
 
+#include "Camera.h"
+
 #ifndef SHAPE_H
 #define SHAPE_H
 
-class Shape {
+class Shape : public Camera{
+private:
+	glm::mat4 View = glm::mat4(1.0f);
 protected:
 	std::vector<GLfloat> vertices;
 	std::vector<GLfloat> colors;
 	std::vector<GLfloat> normals;
 	glm::vec3 singleColor = glm::vec3(0.5f, 0.5f, 0.5f);
 public:
-	glm::mat4 View = glm::mat4(1.0f);
 	glm::mat4 Model = glm::mat4(1.0f);
 	glm::mat4 Projection = glm::mat4(1.0f);
 
@@ -25,11 +28,9 @@ public:
 	};
 
 	Material material;
-
-	Shape() { };
 	void setColor(glm::vec3 color);
 	void draw(bool filled = true, GLuint drawingMode = GL_TRIANGLES);
-	void pushMatrices();
+	void pushMatrices();		//and EyeDirection
 	void pushMaterial();
 };
 
