@@ -4,6 +4,7 @@
 !GlobalVariables.h
 !Shape.h
 !Sphere.h
+!Camera.h
 !beleg.fs
 !beleg.vs
 !Circle.cpp
@@ -12,3 +13,4 @@
 !main.cpp
 !Shape.cpp
 !Sphere.cpp
+!Camera.cpp
