@@ -23,7 +23,7 @@ public:
 
 	struct Material {
 		glm::vec3 ambient = glm::vec3(0.1f, 0.1f, 0.1f);
-		glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+		glm::vec3 diffuse = glm::vec3(0.7f, 0.7f, 0.7f);
 		float shininess = 50.0f;
 	};
 

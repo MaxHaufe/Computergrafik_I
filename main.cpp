@@ -27,7 +27,7 @@
 
 #define DIFFUSE_LIGHTNING 1
 #define PLANETS 1
-#define CARBONATOM 0
+#define CARBONATOM 1
 
 #define CORE 1
 #define ELECTRONS 1
@@ -90,7 +90,7 @@ void init(void) {
 Cube* cube = new Cube();
 Cube* cubeugly = new Cube();
 Sphere* sphere = new Sphere(1, 30, 30);
-Sphere* sphereColorful = new Sphere(1, 30, 30, false, true);
+Sphere* sphereColorful = new Sphere(1, 30, 30);
 Sphere* sphereFunny = new Sphere(1, 30, 30, true);
 
 Circle* electronShell = new Circle();
@@ -188,9 +188,9 @@ void Planets() {
 	moonOrbit->Model = Model;
 
 	//draw them, make sure to draw orbits before spheres
-	moonOrbit->setColor(vec3(153, 102, 255));
+	moonOrbit->setColor(vec3(153/255, 102/255, 255/255));
 	moonOrbit->draw(false, GL_LINES);
-
+	sphereColorful->setColor(vec3(255/255, 102/255, 0/255));
 	sphereColorful->draw();
 
 	//sun
@@ -399,7 +399,7 @@ void display(void) {
 		//vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
 		vec3 LightColor = vec3(0.5f, 0.5f, 0.5f);
 		//vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
-		vec3 LightPosition = vec3(0.0f, 0.0f, -10.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
+		vec3 LightPosition = vec3(0.0f, 0.0f, 0.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
 		//vec3 LightPosition = viewPos;
 
 		GLuint locColor = glGetUniformLocation(program, "LightColor");

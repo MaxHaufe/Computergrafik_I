@@ -28,7 +28,7 @@ void main() {
 	
 	float ConstantAttenuation = 1;
 	float LinearAttenuation = 0;
-	float QuadraticAttenuation = 1;
+	float QuadraticAttenuation = 0;
 
 	vec3 lightDirection=normalize(LightPosition-vec3(Position));	//point
 	//vec3 lightDirection=normalize(LightPosition);	//diffuse
