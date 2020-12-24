@@ -67,9 +67,21 @@ Sphere::Sphere(float radius, unsigned int stackCount, unsigned int sectorCount, 
 				this->vertices.push_back(y);
 				this->vertices.push_back(z);
 			}
+
+			// vertex tex coord (s, t) range between [0, 1]
+			float s, t, s2, t2;;
+
+			s = (float)j / sectorCount;
+			t = (float)i / stackCount;
+
+			s2 = (float)(j + 1) / sectorCount;
+			t2 = (float)(i + 1) / stackCount;
+			for (int k = 0;k < 6;k++) {
+				this->texCoords.push_back(s);
+				this->texCoords.push_back(stackCount - t);		//prevents texture from being upside down
+			}
 		}
 	}
-
 	this->normals = this->vertices;
 
 	if (randomcolors)

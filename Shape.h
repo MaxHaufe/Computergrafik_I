@@ -16,6 +16,7 @@ protected:
 	std::vector<GLfloat> vertices;
 	std::vector<GLfloat> colors;
 	std::vector<GLfloat> normals;
+	std::vector<GLfloat> texCoords;
 	glm::vec3 singleColor = glm::vec3(0.5f, 0.5f, 0.5f);
 public:
 	glm::mat4 Model = glm::mat4(1.0f);
@@ -23,7 +24,7 @@ public:
 
 	struct Material {
 		glm::vec3 ambient = glm::vec3(0.1f, 0.1f, 0.1f);
-		glm::vec3 diffuse = glm::vec3(0.7f, 0.7f, 0.7f);
+		glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
 		float shininess = 50.0f;
 	};
 

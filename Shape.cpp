@@ -1,8 +1,10 @@
 //#include "GlobalVariables.h"
 #include "Shape.h"
 #include <gtx/transform.hpp>
+#include <FreeImage.h>
 #include "GlobalVariables.h"
 
+BYTE* bitmapBits;
 
 void Shape::pushMatrices() {
 
@@ -48,6 +50,11 @@ void Shape::draw(bool filled, GLuint drawingMode) {
 
 	glBindVertexArray(VAO[VAOCube]);
 
+	glBindBuffer(GL_ARRAY_BUFFER, Buffers[TextureBuffer]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * this->texCoords.size(), &this->texCoords[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(vTexCoord);
+
 	glBindBuffer(GL_ARRAY_BUFFER, Buffers[VertexBuffer]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * this->vertices.size(), &this->vertices[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
@@ -75,6 +82,9 @@ void Shape::draw(bool filled, GLuint drawingMode) {
 	//unbind everything - troubleshooting
 	//helped fixing the issue of the depth buffer acting weird
 	glDisableVertexArrayAttrib(VAOCube, vPosition);
+	glDisableVertexArrayAttrib(VAOCube, VertexNormal);
+	glDisableVertexArrayAttrib(VAOCube, vColor);
+	glDisableVertexArrayAttrib(VAOCube, vTexCoord);
 }
 
 void Shape::setColor(glm::vec3 color) {

@@ -27,12 +27,15 @@
 
 #define DIFFUSE_LIGHTNING 1
 #define PLANETS 1
-#define CARBONATOM 1
+#define CARBONATOM 0
 
 #define CORE 1
 #define ELECTRONS 1
 #define SHELLS 1
 #define RANDOMELECTRONS 1
+
+//messing around
+#define PAULA 1
 
 
 using namespace glm;
@@ -45,15 +48,16 @@ GLuint loadShaders(const char* vertexFilePath,
 	const char* computeFilePath);
 GLint height = 100, width = 100;
 enum VAO_IDs { VAOCube, NumVAOs };
-enum Buffer_IDs { VertexBuffer, ColorBuffer, NormalBuffer, ArrayBufferCube, ColorBufferCube, NormalBufferCube, NumBuffers };
-enum Attrib_IDs { vPosition, vColor, vTexcoord, VertexNormal };
+enum Buffer_IDs { VertexBuffer, ColorBuffer, NormalBuffer, ArrayBufferCube, ColorBufferCube, NormalBufferCube, TextureBuffer, NumBuffers };
+enum Attrib_IDs { vPosition, vColor, vTexCoord, VertexNormal };
 GLuint VAO[NumVAOs];
 GLuint Buffers[NumBuffers];
 GLuint program;
 
 GLfloat rotationAngle = 0.0;
 
-GLfloat rotationIncrement = 0.009 ;		//*2, slowed down to 30fps from 60, nvm
+GLfloat rotationIncrement = 0.009*2;		//*2, slowed down to 30fps from 60, nvm
+
 
 void timer(int value) {
 
@@ -63,8 +67,12 @@ void timer(int value) {
 	rotationAngle -= rotationIncrement;
 
 	glutPostRedisplay();
-	glutTimerFunc(1000 / 60, timer, value);
+	glutTimerFunc(1000 / 30, timer, value);
 }
+
+
+
+
 
 void init(void) {
 
@@ -74,6 +82,32 @@ void init(void) {
 	program = loadShaders("beleg.vs", "beleg.fs", "", "", "", "");
 
 
+	//ugly image stuff, TODO
+	FreeImage_Initialise(TRUE);
+
+	FREE_IMAGE_FORMAT bitmapFormat = FIF_UNKNOWN;
+	FIBITMAP* bitmapData;
+	if (PAULA) {
+		bitmapFormat = FreeImage_GetFileType("paula.jpeg");
+		bitmapData = FreeImage_Load(bitmapFormat, "paula.jpeg");
+	}
+	else {
+		bitmapFormat = FreeImage_GetFileType("earth.jpg");
+		bitmapData = FreeImage_Load(bitmapFormat, "earth.jpg");
+	}
+	int bitmapWidth = FreeImage_GetWidth(bitmapData);
+	int bitmapHeight = FreeImage_GetHeight(bitmapData);
+
+	GLuint tex;
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	BYTE* bitmapBits = FreeImage_GetBits(bitmapData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmapWidth, bitmapHeight, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmapBits);
+
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_WRAP_BORDER, GL_REPEAT);
 
 	//generate Buffers
 	glUseProgram(program);
@@ -89,9 +123,9 @@ void init(void) {
 
 Cube* cube = new Cube();
 Cube* cubeugly = new Cube();
-Sphere* sphere = new Sphere(1, 30, 30);
-Sphere* sphereColorful = new Sphere(1, 30, 30);
-Sphere* sphereFunny = new Sphere(1, 30, 30, true);
+Sphere* sphere = new Sphere(1, 1000, 1000);
+Sphere* sphereColorful = new Sphere(1, 300, 300);
+Sphere* sphereFunny = new Sphere(1, 300, 300);
 
 Circle* electronShell = new Circle();
 Circle* earthOrbit = new Circle();
@@ -159,8 +193,8 @@ void Planets() {
 	earthOrbit->Model = Model;
 
 	//draw it
-	earthOrbit->draw(false, GL_LINES);
-	sphere->draw();
+	//earthOrbit->draw(false, GL_LINES);
+	//sphere->draw();
 	//moon
 
 	//calculate moon and its rotation
@@ -189,13 +223,14 @@ void Planets() {
 
 	//draw them, make sure to draw orbits before spheres
 	moonOrbit->setColor(vec3(153/255, 102/255, 255/255));
-	moonOrbit->draw(false, GL_LINES);
+	//moonOrbit->draw(false, GL_LINES);
 	sphereColorful->setColor(vec3(255/255, 102/255, 0/255));
-	sphereColorful->draw();
+	//sphereColorful->draw();
 
 	//sun
-
-	Model = mat4(1.0);
+	ModelS = scale(mat4(1.0), vec3(4.0f, 4.0f, 4.0f));
+	ModelR = rotate(mat4(1.0), 2* rotationAngle, vec3(1.0, 1.0, 0.0f));
+	Model = ModelR * ModelS;
 	sphere->Model = Model;
 	sphere->draw();
 }
@@ -393,13 +428,13 @@ void display(void) {
 
 
 
-	vec3 viewPos(0.0f, 0.0f, 10.0f);		
+	//vec3 viewPos(0.0f, 0.0f, 10.0f);		
 
 	if (DIFFUSE_LIGHTNING) {
 		//vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
 		vec3 LightColor = vec3(0.5f, 0.5f, 0.5f);
 		//vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
-		vec3 LightPosition = vec3(0.0f, 0.0f, 0.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
+		vec3 LightPosition = vec3(0.0f, 0.0f, -10.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
 		//vec3 LightPosition = viewPos;
 
 		GLuint locColor = glGetUniformLocation(program, "LightColor");
@@ -408,8 +443,8 @@ void display(void) {
 		glUniform3fv(locColor, 1, &LightColor[0]);
 		glUniform3fv(locLight, 1, &LightPosition[0]);
 
-		glVertexAttribPointer(vTexcoord, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)(32 * sizeof(float)));
-		glEnableVertexAttribArray(vTexcoord);
+		glVertexAttribPointer(vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)(32 * sizeof(float)));
+		glEnableVertexAttribArray(vTexCoord);
 	}
 	else {
 		vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
@@ -421,8 +456,8 @@ void display(void) {
 		glUniform3fv(locColor, 1, &LightColor[0]);
 		glUniform3fv(locLight, 1, &LightPosition[0]);
 
-		glVertexAttribPointer(vTexcoord, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)(32 * sizeof(float)));
-		glEnableVertexAttribArray(vTexcoord);
+		glVertexAttribPointer(vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)(32 * sizeof(float)));
+		glEnableVertexAttribArray(vTexCoord);
 	}
 	
 

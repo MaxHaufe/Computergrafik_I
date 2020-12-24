@@ -12,12 +12,12 @@ uniform Material material;
 in vec4 Color;
 in vec3 Normal;
 in vec4 Position;
+in vec2 fTexCoord;
 
-//uniform vec3 Ambient;			//todo
 uniform vec3 LightColor;
 uniform vec3 LightPosition;
 uniform vec3 EyeDirection; 
-//uniform float Shininess;		//TODO
+uniform sampler2D tex;
 
 //vec3 EyeDirection =  vec3(0.0f, 3.5f, 10.0f) * vec3(Position);		//hardcoded temporary EyeDirection
 
@@ -43,5 +43,7 @@ void main() {
 	vec3 scatteredLight=material.ambient+material.diffuse*(LightColor*diffuse)*attenuation;
 	vec3 reflectedLight=LightColor*specular*attenuation;
 	vec3 rgb=min(Color.rgb*scatteredLight+reflectedLight,vec3(1.0));
-	fColor=vec4(rgb,Color.a);
+	//fColor=vec4(rgb,Color.a);
+
+	fColor = texture2D(tex,fTexCoord);
 }
