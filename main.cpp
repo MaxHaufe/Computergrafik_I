@@ -84,6 +84,7 @@ Circle* earthOrbit = new Circle(1, 500);
 Circle* moonOrbit = new Circle(1, 500);
 
 
+
 void init(void) {
 
 	printf("\n%s", (char*)glGetString(GL_RENDERER));
@@ -106,18 +107,18 @@ void init(void) {
 	glGenBuffers(NumBuffers, Buffers);
 	glGenVertexArrays(NumVAOs, VAO);
 	
-	// Enable depth test
-	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS);
-	glFlush();
+	glEnable(GL_TEXTURE_2D);
+
+
 }
 
 
 
 void Planets() {
 
-	vec3 viewPos(0.0f, 3.5f, -10.0f);
+
+
+	vec3 viewPos(0.0f, 3.5f, 10.0f);
 	vec3 orbitColor = vec3(166.0f / 255.0f, 166.0f / 255.0f, 166.0f / 255.0f);
 	sun->material.ambient = vec3(1, 1, 1);		//make sun bright
 
@@ -142,9 +143,10 @@ void Planets() {
 
 	glViewport(0, 0, width, height);
 
-	//Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -5.0f, 20.0f);									//GEHT AUCH
-	Projection = frustum(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 25.0f);												//FUNKTIONIERT !!!!!!!!!!!
+	//Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -5.0f, 20.0f);									//GEHT AUCHs
+	//Projection = frustum(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 25.0f);												//FUNKTIONIERT !!!!!!!!!!!
 	float aspect = (float)width / (float)height;
+	Projection = perspective(45.0f, float(width) / float(height), 0.1f, 20.0f);
 	//Projection = ortho(-aspect, aspect,(float) -1, (float)1, (float)-1, (float)1); // geht glaub
 	//Projection = glm::perspective(aspect, 1.0f, 3.5f, -0.5f);	//EINFACH MAL NCIHT MACHEN
 
@@ -172,7 +174,7 @@ void Planets() {
 	ModelS = scale(mat4(1.0), vec3(0.5f, 0.5f, 0.5f));
 	
 	//tilt it and make it rotate around its own axis
-	ModelR2 = rotate(mat4(1.0), 0.408407f, vec3(0.0, 0.0, 1.0));			//0,408407  = 23.4°
+	ModelR2 = rotate(mat4(1.0), -0.408407f, vec3(0.0, 0.0, 1.0));			//0,408407  = 23.4°
 	ModelR3 = rotate(mat4(1.0), -3*rotationAngle, vec3(0.0, 1.0, 0.0));		//spin around own axis
 
 	Model = ModelR * ModelT * ModelR4* ModelR2 * ModelR3 * ModelS;
@@ -186,32 +188,57 @@ void Planets() {
 	ModelT = translate(mat4(1.0f), vec3(0.0f, 0.0f, -1.0f));
 	ModelS = scale(mat4(1.0f), vec3(orbitRadius, orbitRadius, 0));
 	ModelR = rotate(mat4(1.0f), (float)M_PI / 2, vec3(1.0f, 0.0f, 0.0f));		//rotate to fit x-z axis
+
 	Model = ModelR * ModelS;
 	earthOrbit->Model = Model;
+
+
 
 	//draw it
 	earthOrbit->setColor(orbitColor);
 	earthOrbit->draw(false, GL_LINES);
-	//moon
+
+	//Bug fix from here on: do not translate to variable values!!!
+	//moon ----------------------------------------------------
 
 	//calculate moon and its rotation
-	orbitRadius = 1.5f;
+	orbitRadius = 4.0f;		//orbit around sun
 	xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
+
+	ModelR = rotate(mat4(1.0), -rotationAngle, vec3(0.0, 1.0, 0.0));
+	ModelT = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
+	ModelT3 = translate(mat4(1.0), vec3(-xzOrbitValue, 0, -xzOrbitValue));
+
+	orbitRadius = 1.5f;		//orbit around earth
+	xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
+
+	ModelR2 = rotate(mat4(1.0), 5*rotationAngle, vec3(0.0, 1.0, 0.0));
+	ModelT2 = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
+
+	ModelS = scale(mat4(1.0), vec3(0.2f, 0.2f, 0.2f));
+
+	Model = ModelR * ModelT * ModelR2 * ModelT2 * ModelS;
+
+	moon->Model = Model;
+
+	moon->draw();
+
+	//--------------------------------------------------------
 
 	float xEarth, zEarth;			//translate center of rotation to earth's current point
 	xEarth = earthOrbitVal * cosf(rotationAngle) - earthOrbitVal * sinf(rotationAngle);
 	zEarth = earthOrbitVal * sinf(rotationAngle) + earthOrbitVal * cosf(rotationAngle);
 
-	ModelR = rotate(mat4(1.0), 5 * rotationAngle, vec3(0.0, 1.0, 0.0f));
-	ModelS = scale(mat4(1.0), vec3(0.2f, 0.2f, 0.2f));
-	ModelT = translate(mat4(1.0), vec3(xEarth, 0.0, zEarth));
-	ModelT2 = translate(mat4(1.0), vec3(1, 0.0, 1));
+	//ModelR = rotate(mat4(1.0), 5 * rotationAngle, vec3(0.0, 1.0, 0.0f));
+	//ModelS = scale(mat4(1.0), vec3(0.2f, 0.2f, 0.2f));
+	//ModelT = translate(mat4(1.0), vec3(xEarth, 0.0, zEarth));
+	//ModelT2 = translate(mat4(1.0), vec3(1, 0.0, 1));
 
-	Model = ModelT * ModelR * ModelT2 * ModelS;		
+	//Model = ModelT * ModelR * ModelT2 * ModelS;		
 
-	moon->Model = Model;
+	//moon->Model = Model;
 
-	moon->draw();
+	//moon->draw();
 
 	//calculate moon orbit
 	ModelT = translate(mat4(1.0f), vec3(xEarth, 0.0, zEarth));		//fit rotation centre to earths current pos
@@ -231,6 +258,11 @@ void Planets() {
 	Model = ModelR * ModelS;
 	sun->Model = Model;
 	sun->draw();
+
+	// Enable depth test
+	glEnable(GL_DEPTH_TEST);
+	// Accept fragment if it closer to the camera than the former one
+	glDepthFunc(GL_LESS);
 }
 
 void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND Sphere* sphere = new Sphere(1, 30, 30); are required; Sphere Parameters do not matter, as long as Radius equals 1
@@ -422,7 +454,7 @@ void display(void) {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//glClearColor(0.5, 0., 0.5, 0);
-	glClearColor(0.0, 0.0, 0.0,0);
+	glClearColor(0.0, 0.0, 0.0,1);
 
 
 

@@ -49,10 +49,10 @@ void main() {
 		//fColor = texture2D(tex,fTexCoord);
 		vec3 text = texture2D(tex,fTexCoord).rgb;
 		vec3 rgb=min(text.rgb*scatteredLight+reflectedLight,vec3(1.0));
-		fColor=vec4(rgb,1.0f);
+		fColor=vec4(rgb,texture2D(tex,fTexCoord).a);
 	}
 	else{
 		//fColor = texture2D(tex,fTexCoord);
-		fColor=vec4(rgb,1.0f);
+		fColor=vec4(rgb,Color.a);
 	}
 }

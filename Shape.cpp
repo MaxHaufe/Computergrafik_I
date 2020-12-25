@@ -49,6 +49,7 @@ void Shape::draw(bool filled, GLuint drawingMode) {
 		GLuint texEnableLoc = glGetUniformLocation(program, "textureEnabled");
 		glUniform1f(texEnableLoc, this->textureEnabled);
 
+		glEnable(GL_TEXTURE_2D);
 		//bind texture
 		glBindTexture(GL_TEXTURE_2D, this->image.tex);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->image.bitmapWidth, this->image.bitmapHeight, 0, GL_BGR, GL_UNSIGNED_BYTE, this->image.bitmapBits);
