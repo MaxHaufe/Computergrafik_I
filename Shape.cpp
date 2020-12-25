@@ -45,9 +45,29 @@ void Shape::pushMaterial() {
 
 void Shape::draw(bool filled, GLuint drawingMode) {
 
+	if (this->textureEnabled) {
+		GLuint texEnableLoc = glGetUniformLocation(program, "textureEnabled");
+		glUniform1f(texEnableLoc, this->textureEnabled);
+
+		//bind texture
+		glBindTexture(GL_TEXTURE_2D, this->image.tex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->image.bitmapWidth, this->image.bitmapHeight, 0, GL_BGR, GL_UNSIGNED_BYTE, this->image.bitmapBits);
+
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_WRAP_BORDER, GL_REPEAT);
+	}
+	else {
+		GLuint texEnableLoc = glGetUniformLocation(program, "textureEnabled");
+		glUniform1f(texEnableLoc, this->textureEnabled);
+	}
+
+	//push Matrices and Material
 	Shape::pushMaterial();
 	Shape::pushMatrices();
 
+	//bind Arrays
 	glBindVertexArray(VAO[VAOCube]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, Buffers[TextureBuffer]);
@@ -94,4 +114,24 @@ void Shape::setColor(glm::vec3 color) {
 		this->colors.push_back(color.y);
 		this->colors.push_back(color.z);
 	}
+}
+
+void Shape::EnableTexture(char* path) {		//set uniform to 1 for shader, load file ONCE, bind texture in draw call, inefficient??
+	this->textureEnabled = 1.0f;
+	this->path = path;
+
+	this->image.bitmapFormat = FreeImage_GetFileType(this->path);
+	this->image.bitmapData = FreeImage_Load(this->image.bitmapFormat, path);
+
+	this->image.bitmapWidth = FreeImage_GetWidth(this->image.bitmapData);
+	this->image.bitmapHeight = FreeImage_GetHeight(this->image.bitmapData);
+
+	glGenTextures(1, &this->image.tex);
+
+	this->image.bitmapBits = FreeImage_GetBits(this->image.bitmapData);
+}
+
+void Shape::DisableTexture() {
+	this->textureEnabled = 0.0f;
+	this->path = "NULL";
 }

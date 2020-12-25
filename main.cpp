@@ -35,7 +35,7 @@
 #define RANDOMELECTRONS 1
 
 //messing around
-#define PAULA 1
+#define PAULA 0
 
 
 using namespace glm;
@@ -56,7 +56,7 @@ GLuint program;
 
 GLfloat rotationAngle = 0.0;
 
-GLfloat rotationIncrement = 0.009*2;		//*2, slowed down to 30fps from 60, nvm
+GLfloat rotationIncrement = 0.009;		//*2, slowed down to 30fps from 60, nvm
 
 
 void timer(int value) {
@@ -67,11 +67,21 @@ void timer(int value) {
 	rotationAngle -= rotationIncrement;
 
 	glutPostRedisplay();
-	glutTimerFunc(1000 / 30, timer, value);
+	glutTimerFunc(1000 / 60, timer, value);
 }
 
 
+Cube* cube = new Cube();
+Cube* cubeugly = new Cube();
+Sphere* sphere = new Sphere(1, 100, 100);
 
+Sphere* sun = new Sphere(1, 500, 500);
+Sphere* earth = new Sphere(1, 300, 300);
+Sphere* moon = new Sphere(1, 300, 300);
+
+Circle* electronShell = new Circle();
+Circle* earthOrbit = new Circle(1, 500);
+Circle* moonOrbit = new Circle(1, 500);
 
 
 void init(void) {
@@ -85,29 +95,11 @@ void init(void) {
 	//ugly image stuff, TODO
 	FreeImage_Initialise(TRUE);
 
-	FREE_IMAGE_FORMAT bitmapFormat = FIF_UNKNOWN;
-	FIBITMAP* bitmapData;
-	if (PAULA) {
-		bitmapFormat = FreeImage_GetFileType("paula.jpeg");
-		bitmapData = FreeImage_Load(bitmapFormat, "paula.jpeg");
-	}
-	else {
-		bitmapFormat = FreeImage_GetFileType("earth.jpg");
-		bitmapData = FreeImage_Load(bitmapFormat, "earth.jpg");
-	}
-	int bitmapWidth = FreeImage_GetWidth(bitmapData);
-	int bitmapHeight = FreeImage_GetHeight(bitmapData);
-
-	GLuint tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	BYTE* bitmapBits = FreeImage_GetBits(bitmapData);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmapWidth, bitmapHeight, 0, GL_BGR, GL_UNSIGNED_BYTE, bitmapBits);
-
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_WRAP_BORDER, GL_REPEAT);
+	moon->EnableTexture("moon.jpg");
+	sun->EnableTexture("sun.jpg");
+	earth->EnableTexture("earth.jpg");
+	//earth->EnableTexture("earthNASA.jpg");
+	//earth->EnableTexture("earthNight.jpg");
 
 	//generate Buffers
 	glUseProgram(program);
@@ -121,28 +113,27 @@ void init(void) {
 	glFlush();
 }
 
-Cube* cube = new Cube();
-Cube* cubeugly = new Cube();
-Sphere* sphere = new Sphere(1, 1000, 1000);
-Sphere* sphereColorful = new Sphere(1, 300, 300);
-Sphere* sphereFunny = new Sphere(1, 300, 300);
 
-Circle* electronShell = new Circle();
-Circle* earthOrbit = new Circle();
-Circle* moonOrbit = new Circle();
 
 void Planets() {
 
-	vec3 viewPos(0.0f, 3.5f, 10.0f);
+	vec3 viewPos(0.0f, 3.5f, -10.0f);
+	vec3 orbitColor = vec3(166.0f / 255.0f, 166.0f / 255.0f, 166.0f / 255.0f);
+	sun->material.ambient = vec3(1, 1, 1);		//make sun bright
 
-	sphere->setViewPos(viewPos);
-	sphereColorful->setViewPos(viewPos);
+	sun->setViewPos(viewPos);
+	earth->setViewPos(viewPos);
+	moon->setViewPos(viewPos);
+
 	earthOrbit->setViewPos(viewPos);
 	moonOrbit->setViewPos(viewPos);
 
 	mat4 Projection = mat4(1.0);
 	mat4 Model = mat4(1.0);
 	mat4 ModelR = mat4(1.0);
+	mat4 ModelR2 = mat4(1.0);
+	mat4 ModelR3 = mat4(1.0);
+	mat4 ModelR4 = mat4(1.0);
 	mat4 ModelT = mat4(1.0);
 	mat4 ModelS = mat4(1.0f);
 	mat4 ModelT2 = mat4(1.0f);
@@ -157,32 +148,38 @@ void Planets() {
 	//Projection = ortho(-aspect, aspect,(float) -1, (float)1, (float)-1, (float)1); // geht glaub
 	//Projection = glm::perspective(aspect, 1.0f, 3.5f, -0.5f);	//EINFACH MAL NCIHT MACHEN
 
-	sphere->Projection = Projection;
-	sphereColorful->Projection = Projection;
+	sun->Projection = Projection;
+	earth->Projection = Projection;
+	moon->Projection = Projection;
+
 	earthOrbit->Projection = Projection;
 	moonOrbit->Projection = Projection;
 
 	//earth
-
-	Model = mat4(1.0);
-	ModelR = mat4(1.0);
-	ModelT = mat4(1.0);
-	ModelS = mat4(1.0f);
-	ModelT2 = mat4(1.0f);
-	ModelT3 = mat4(1.0f);
 
 
 	//calculate earth and its rotation
 	float orbitRadius = 4;
 	float xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
 	float earthOrbitVal = xzOrbitValue;		//for the translation of the moon orbit
-
+	
+	//rotate it around the sun
 	ModelR = rotate(mat4(1.0), -rotationAngle, vec3(0.0, 1.0, 0.0));
+	ModelR4 = rotate(mat4(1.0), rotationAngle, vec3(0.0, 1.0, 0.0));		//if this wasn't applied, and if earth wouldn't spin around itself,
+																			//one spot, for example, south america would always point towards the sun
 	ModelT = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
+	
 	ModelS = scale(mat4(1.0), vec3(0.5f, 0.5f, 0.5f));
-	Model = ModelR * ModelT * ModelS;
+	
+	//tilt it and make it rotate around its own axis
+	ModelR2 = rotate(mat4(1.0), 0.408407f, vec3(0.0, 0.0, 1.0));			//0,408407  = 23.4°
+	ModelR3 = rotate(mat4(1.0), -3*rotationAngle, vec3(0.0, 1.0, 0.0));		//spin around own axis
 
-	sphere->Model = Model;
+	Model = ModelR * ModelT * ModelR4* ModelR2 * ModelR3 * ModelS;
+	//Model = ModelR * ModelT * ModelR4 * ModelR2 * ModelR3;
+	
+	earth->Model = Model;
+	earth->draw();
 
 
 	//calculate earth orbit
@@ -193,8 +190,8 @@ void Planets() {
 	earthOrbit->Model = Model;
 
 	//draw it
-	//earthOrbit->draw(false, GL_LINES);
-	//sphere->draw();
+	earthOrbit->setColor(orbitColor);
+	earthOrbit->draw(false, GL_LINES);
 	//moon
 
 	//calculate moon and its rotation
@@ -212,7 +209,9 @@ void Planets() {
 
 	Model = ModelT * ModelR * ModelT2 * ModelS;		
 
-	sphereColorful->Model = Model;
+	moon->Model = Model;
+
+	moon->draw();
 
 	//calculate moon orbit
 	ModelT = translate(mat4(1.0f), vec3(xEarth, 0.0, zEarth));		//fit rotation centre to earths current pos
@@ -222,17 +221,16 @@ void Planets() {
 	moonOrbit->Model = Model;
 
 	//draw them, make sure to draw orbits before spheres
-	moonOrbit->setColor(vec3(153/255, 102/255, 255/255));
-	//moonOrbit->draw(false, GL_LINES);
-	sphereColorful->setColor(vec3(255/255, 102/255, 0/255));
-	//sphereColorful->draw();
+	moonOrbit->setColor(orbitColor);
+	moonOrbit->draw(false, GL_LINES);
 
 	//sun
-	ModelS = scale(mat4(1.0), vec3(4.0f, 4.0f, 4.0f));
-	ModelR = rotate(mat4(1.0), 2* rotationAngle, vec3(1.0, 1.0, 0.0f));
+	//ModelS = scale(mat4(1.0), vec3(4.0f, 4.0f, 4.0f));
+	ModelS = mat4(1.0f);
+	ModelR = rotate(mat4(1.0), 0.4f * -rotationAngle, vec3(0.0, 1.0, 0.0f));
 	Model = ModelR * ModelS;
-	sphere->Model = Model;
-	sphere->draw();
+	sun->Model = Model;
+	sun->draw();
 }
 
 void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND Sphere* sphere = new Sphere(1, 30, 30); are required; Sphere Parameters do not matter, as long as Radius equals 1
@@ -423,16 +421,16 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 void display(void) {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.5, 0., 0.5, 0);
-	//glClearColor(0.0, 0.0, 0.0,0);
+	//glClearColor(0.5, 0., 0.5, 0);
+	glClearColor(0.0, 0.0, 0.0,0);
 
 
 
 	//vec3 viewPos(0.0f, 0.0f, 10.0f);		
 
 	if (DIFFUSE_LIGHTNING) {
-		//vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
-		vec3 LightColor = vec3(0.5f, 0.5f, 0.5f);
+		vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
+		//vec3 LightColor = vec3(0.5f, 0.5f, 0.5f);
 		//vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
 		vec3 LightPosition = vec3(0.0f, 0.0f, -10.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
 		//vec3 LightPosition = viewPos;
@@ -442,22 +440,16 @@ void display(void) {
 
 		glUniform3fv(locColor, 1, &LightColor[0]);
 		glUniform3fv(locLight, 1, &LightPosition[0]);
-
-		glVertexAttribPointer(vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)(32 * sizeof(float)));
-		glEnableVertexAttribArray(vTexCoord);
 	}
 	else {
 		vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
-		vec3 LightPosition = vec3(-5, 0, 5);
+		vec3 LightPosition = vec3(0, 0, 0);
 
 		GLuint locColor = glGetUniformLocation(program, "LightColor");
 		GLuint locLight = glGetUniformLocation(program, "LightPosition");
 
 		glUniform3fv(locColor, 1, &LightColor[0]);
 		glUniform3fv(locLight, 1, &LightPosition[0]);
-
-		glVertexAttribPointer(vTexCoord, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)(32 * sizeof(float)));
-		glEnableVertexAttribArray(vTexCoord);
 	}
 	
 
@@ -497,6 +489,7 @@ void reshape(int w, int h) {
 	height = h;
 }
 
+
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH);
@@ -508,7 +501,9 @@ int main(int argc, char** argv) {
 	glewExperimental = GL_TRUE;
 	if (glewInit()) printf("Error");
 	init();
-	glutTimerFunc(1, timer, 0);
+	//glutIdleFunc(idle);
+	timer(0);
+
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
 	glutMainLoop();
