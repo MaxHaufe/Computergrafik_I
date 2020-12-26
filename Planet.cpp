@@ -7,7 +7,6 @@ using namespace glm;
 
 void Planet::draw() {
 
-
    float xzOrbitValue = this->radiusFromSun / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
 
    //i will be measuring the rotationangles relative to earth
@@ -17,6 +16,7 @@ void Planet::draw() {
    mat4 ModelTransRevolution = mat4(1.0);
   
    mat4 ModelRotRevolution = mat4(1.0);
+   mat4 ModelRotRevolutionFix = mat4(1.0); //necessary for rotation offset, disable rotation and this, then see what happens :^)
    mat4 ModelRotRotation = mat4(1.0);
    mat4 ModelRotRotationOffset = mat4(1.0);
 
@@ -24,22 +24,21 @@ void Planet::draw() {
    ModelS = scale(mat4(1.0f), vec3(this->scaleParameter, this->scaleParameter, this->scaleParameter));
 
    //make it rotate around its own axis
-   if (this->antiClockwiseRotation) {
-        ModelRotRotation = rotate(mat4(1.0), 1 / this->rotationSpeed * 365.256f * -rotationAngle, vec3(0.0, 1.0, 0.0));
-   }
-   else {
-       ModelRotRotation = rotate(mat4(1.0), 1 / this->rotationSpeed * 365.256f * rotationAngle, vec3(0.0, 1.0, 0.0));
-   }
+
+   // ModelRotRotation = rotate(mat4(1.0), 1 / this->rotationSpeed * 365.256f * -rotationAngle, vec3(0.0, 1.0, 0.0));
+   ModelRotRotation = rotate(mat4(1.0), this->rotationSpeed * -rotationAngle, vec3(0.0, 1.0, 0.0));
 
    //create offset tilt
    ModelRotRotationOffset = rotate(mat4(1.0), -this->rotationAngleOffset, vec3(0.0, 0.0, 1.0));
 
    //make it spin around origin
    ModelTransRevolution = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
-   ModelRotRevolution = rotate(mat4(1.0), 1 / this->revolutionSpeed * 365.256f * -rotationAngle, vec3(0.0, 1.0, 0.0));
+   //ModelTransRevolution = translate(mat4(1.0), vec3(0, 0, -this->radiusFromSun));
+   ModelRotRevolution = rotate(mat4(1.0), 1.0f / this->revolutionSpeed * 365.256f * -rotationAngle, vec3(0.0, 1.0, 0.0));
+   ModelRotRevolutionFix = rotate(mat4(1.0), 1.0f / this->revolutionSpeed * 365.256f * rotationAngle, vec3(0.0, 1.0, 0.0));
    
    //merge models
-   this->Model = ModelRotRevolution * ModelTransRevolution *  ModelRotRotationOffset * ModelRotRotation * ModelS;
+   this->Model = ModelRotRevolution * ModelTransRevolution * ModelRotRevolutionFix * ModelRotRotationOffset * ModelRotRotation * ModelS;
    
    Shape::draw();
 }
@@ -92,15 +91,5 @@ float Planet::getRotationAngleOffset() const
 void Planet::setRotationAngleOffset(float rotationAngleOffset)
 {
     this->rotationAngleOffset = rotationAngleOffset;
-}
-
-bool Planet::getAntiClockwiseRotation() const
-{
-    return antiClockwiseRotation;
-}
-
-void Planet::setAntiClockwiseRotation(bool antiClockwiseRotation)
-{
-    this->antiClockwiseRotation = antiClockwiseRotation;
 }
 
