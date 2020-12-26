@@ -39,6 +39,8 @@ void Shape::pushMaterial() {
 	glUniform3fv(locAmb, 1, &this->material.ambient[0]);
 	GLuint locDif = glGetUniformLocation(program, "material.diffuse");
 	glUniform3fv(locDif, 1, &this->material.diffuse[0]);
+	GLuint locSpecVec = glGetUniformLocation(program, "material.specular");
+	glUniform3fv(locSpecVec, 1, &this->material.specular[0]);
 	GLuint locSpec = glGetUniformLocation(program, "material.shininess");
 	glUniform1f(locSpec, this->material.shininess);
 }

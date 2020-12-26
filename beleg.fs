@@ -4,6 +4,7 @@
 struct Material {
     vec3 ambient;
     vec3 diffuse;
+	vec3 specular;
     float shininess;
 };
 
@@ -42,7 +43,7 @@ void main() {
 	float specular=max(0.0,dot(Normal,halfVector));
 	if (diffuse==0.0) specular=0.0; else specular=pow(specular,material.shininess);
 	vec3 scatteredLight=material.ambient+material.diffuse*(LightColor*diffuse)*attenuation;
-	vec3 reflectedLight=LightColor*specular*attenuation;
+	vec3 reflectedLight=LightColor*material.specular*specular*attenuation;
 	vec3 rgb=min(Color.rgb*scatteredLight+reflectedLight,vec3(1.0));
 
 	if (textureEnabled == 1.0f){

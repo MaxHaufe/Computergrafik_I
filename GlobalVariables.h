@@ -11,3 +11,4 @@ enum Attrib_IDs { vPosition, vColor, vTexCoord, VertexNormal };
 extern GLuint VAO[NumVAOs];
 extern GLuint Buffers[NumBuffers];
 extern GLuint program;
+extern GLfloat rotationAngle;
