@@ -25,6 +25,7 @@
 #include "Sphere.h"
 #include "Circle.h"
 #include "Planet.h"
+#include "Orbit.h"
 
 #define DIFFUSE_LIGHTNING 1
 #define PLANETS 1
@@ -70,26 +71,35 @@ void timer(int value) {
 	glutPostRedisplay();
 	glutTimerFunc(1000 / 60, timer, value);
 }
-Planet* mars = new Planet(1.0f,300,300);
+
 
 Cube* cube = new Cube();
 Cube* cubeugly = new Cube();
-Sphere* sphere = new Sphere(1, 100, 100);
+Sphere* sphere = new Sphere();
 
-Sphere* sun = new Sphere(1, 500, 500);
-Sphere* earth = new Sphere(1, 300, 300);
-Sphere* moon = new Sphere(1, 300, 300);
-Sphere* venus = new Sphere(1, 200, 200);
-Sphere* mercury = new Sphere(1, 200, 200);
+Sphere* moon = new Sphere(1, 100, 100);
 
-Circle* electronShell = new Circle();
-Circle* earthOrbit = new Circle(1, 500);
-Circle* moonOrbit = new Circle(1, 500);
-Circle* venusOrbit = new Circle(1, 500);
-Circle* mercuryOrbit = new Circle(1, 500);
+Planet* sun = new Planet(1, 200, 200);
+Planet* jupiter = new Planet(1, 200, 200);
+Planet* earth = new Planet(1, 100, 100);
+Planet* venus = new Planet(1, 100, 100);
+Planet* mercury = new Planet(1, 100, 100);
+Planet* mars = new Planet(1.0f, 100, 100);
+Planet* saturn = new Planet(1.0f, 100, 100);
 
-std::vector<Shape*> celestials = { sun,moon,earth,venus,mercury, mars};
-std::vector<Shape*> orbits = { earthOrbit, moonOrbit, venusOrbit, mercuryOrbit };
+Circle* moonOrbit = new Circle(1, 100);
+Circle* electronShell = new Circle(1,100);
+
+Orbit* earthOrbit = new Orbit(1, 100);
+Orbit* venusOrbit = new Orbit(1, 100);
+Orbit* mercuryOrbit = new Orbit(1, 100);
+Orbit* marsOrbit = new Orbit(1, 100);
+Orbit* jupiterOrbit = new Orbit(1, 100);
+Orbit* saturnOrbit = new Orbit(1, 100);
+
+
+std::vector<Shape*> celestials = { sun,moon,earth,venus,mercury, mars, jupiter, saturn};
+std::vector<Shape*> orbits = { earthOrbit, moonOrbit, venusOrbit, mercuryOrbit, marsOrbit,jupiterOrbit, saturnOrbit };
 
 std::vector<Shape*> solarSystem;
 
@@ -117,12 +127,25 @@ void init(void) {
 	//sun->EnableTexture("paula.jpeg");
 	//earth->EnableTexture("earth.jpg");	//2
 	//earth->EnableTexture("earth3.jpg");		//1
-	earth->EnableTexture("earth4.jpg");			//0
+	//earth->EnableTexture("earth4.jpg");			//0
+	//earth->EnableTexture("earthClouds2.jpg");		//icy earth, v cool	
+	//earth->EnableTexture("earthClouds.jpg");		//cloudy earth, also v cool	
+	earth->EnableTexture("earthClouds3.jpg");		//cloudy earth, > earthClouds
 //	earth->EnableTexture("earthNASA.jpg");//3
 	//earth->EnableTexture("earthNight.jpg");
 	venus->EnableTexture("venus.jpg");
 	mars->EnableTexture("mars.jpg");
+	mercury->EnableTexture("mercury.jpg");
+	jupiter->EnableTexture("jupiter.jpg");
+	saturn->EnableTexture("saturn.jpg");
+
 	//generate Buffers
+
+	// Enable depth test
+	glEnable(GL_DEPTH_TEST);
+	// Accept fragment if it closer to the camera than the former one
+	glDepthFunc(GL_LESS);
+
 	glUseProgram(program);
 	glGenBuffers(NumBuffers, Buffers);
 	glGenVertexArrays(NumVAOs, VAO);
@@ -154,9 +177,9 @@ void Planets() {
 	glViewport(0, 0, width, height);
 
 	//Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -5.0f, 20.0f);									//GEHT AUCHs
-	//Projection = frustum(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 25.0f);												//FUNKTIONIERT !!!!!!!!!!!
+	//Projection = frustum(-5.0f, 5.0f, -5.0f, 5.0f, 4.0f, 25.0f);												//FUNKTIONIERT !!!!!!!!!!!
 	float aspect = (float)width / (float)height;
-	Projection = perspective(45.0f, float(width) / float(height), 0.1f, 20.0f);
+	Projection = perspective(45.0f, float(width) / float(height), 0.0001f, 30.0f);
 	//Projection = ortho(-aspect, aspect,(float) -1, (float)1, (float)-1, (float)1); // geht glaub
 	//Projection = glm::perspective(aspect, 1.0f, 3.5f, -0.5f);	//EINFACH MAL NCIHT MACHEN
 
@@ -173,98 +196,53 @@ void Planets() {
 		orbits[i]->setColor(orbitColor);
 	}
 
-	mars->setViewPos(viewPos);
-	mars->Projection = Projection;
-
 	//earth
 
+	float earthscaleparameter = 0.4f;
 
 	//calculate earth and its rotation
 	float orbitRadius = 4;
 	float xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
 	float earthOrbitVal = xzOrbitValue;		//for the translation of the moon orbit
 	
-	//rotate it around the sun
-	ModelR = rotate(mat4(1.0), -rotationAngle, vec3(0.0, 1.0, 0.0));
-	ModelR4 = rotate(mat4(1.0), rotationAngle, vec3(0.0, 1.0, 0.0));		//if this wasn't applied, and if earth wouldn't spin around itself,
-																			//one spot, for example, south america would always point towards the sun
-	ModelT = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
-	
-	ModelS = scale(mat4(1.0), vec3(0.3f, 0.3f, 0.3f));
-	
-	//tilt it and make it rotate around its own axis
-	ModelR2 = rotate(mat4(1.0), -0.408407f, vec3(0.0, 0.0, 1.0));			//0,408407  = 23.4°
-	ModelR3 = rotate(mat4(1.0), -5*rotationAngle, vec3(0.0, 1.0, 0.0));		//spin around own axis
 
-	Model = ModelR * ModelT * ModelR4* ModelR2 * ModelR3 * ModelS;
-	//Model = ModelR * ModelT * ModelR4 * ModelR2 * ModelR3;
-	
-	earth->Model = Model;
+	earth->setRevolutionSpeed(365.256f);
+	earth->setRotationSpeed(5.0f);	//24h
+	earth->setRotationAngleOffset(0.408407f);
+	earth->setScaleParameter(earthscaleparameter);
+	earth->setRadiusFromSun(orbitRadius);
 	earth->draw();
 
-
-	//calculate earth orbit
-	ModelT = translate(mat4(1.0f), vec3(0.0f, 0.0f, -1.0f));
-	ModelS = scale(mat4(1.0f), vec3(orbitRadius, orbitRadius, 0));
-	ModelR = rotate(mat4(1.0f), (float)M_PI / 2, vec3(1.0f, 0.0f, 0.0f));		//rotate to fit x-z axis
-
-	Model = ModelR * ModelS;
-	earthOrbit->Model = Model;
-
-
-
-	//draw it
-	earthOrbit->setColor(orbitColor);
+	earthOrbit->setRadiusFromSun(orbitRadius);
 	earthOrbit->draw(false, GL_LINES);
 
 
-	//moon ----------------------------------------------------
+	//moon ---------------------------------------------------- the moon can not be handled as a planet due to the varying center of rotation
 
 	//calculate moon and its rotation
-	orbitRadius = 4.0f;		//orbit around sun
+	orbitRadius = earth->getRadiusFromSun();		//orbit around sun
 	xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
 
 	ModelR = rotate(mat4(1.0), -rotationAngle, vec3(0.0, 1.0, 0.0));
-	//ModelR4 = rotate(mat4(1.0), rotationAngle, vec3(0.0, 1.0, 0.0));		//unspin ModelR
 	ModelT = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
 
 	orbitRadius = 0.7f;		//orbit around earth
 	xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
 
-	ModelR2 = rotate(mat4(1.0), 4*rotationAngle, vec3(0.0, 1.0, 0.0));
+	//ModelR2 = rotate(mat4(1.0), 4*rotationAngle, vec3(0.0, 1.0, 0.0));		//27 days for revolution
+	ModelR2 = rotate(mat4(1.0), 1.0f / (2*27.0f) * 365.256f * rotationAngle, vec3(0.0, 1.0, 0.0));	//27 days for revolution, halved moons rotation speed because it looks better
 
 	ModelT2 = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
 
-	ModelS = scale(mat4(1.0), vec3(0.27f * 0.3f, 0.27f * 0.3f, 0.27f * 0.3f));		//earth is 0.27* the size of earth
-	//ModelR3 = rotate(mat4(1.0f), 0.0872665f, vec3(0.0f, 0.0f, 1.0f));		//tilt of 5 degrees; 0,0872665 = 5deg
+	ModelS = scale(mat4(1.0), vec3(0.27f * earthscaleparameter, 0.27f * earthscaleparameter, 0.27f * earthscaleparameter));		//earth is 0.27* the size of earth
 
-	//Model = ModelR * ModelT *ModelR4* ModelR3 * ModelR2 * ModelT2 * ModelS;
 	Model = ModelR * ModelT * ModelR2 * ModelT2 * ModelS;
 
 	moon->Model = Model;
 
 	moon->draw();
 
-	//--------------------------------------------------------
-
-	//float xEarth, zEarth;			//translate center of rotation to earth's current point
-	//xEarth = earthOrbitVal * cosf(rotationAngle) - earthOrbitVal * sinf(rotationAngle);
-	//zEarth = earthOrbitVal * sinf(rotationAngle) + earthOrbitVal * cosf(rotationAngle);
-
-	//ModelR = rotate(mat4(1.0), 5 * rotationAngle, vec3(0.0, 1.0, 0.0f));
-	//ModelS = scale(mat4(1.0), vec3(0.2f, 0.2f, 0.2f));
-	//ModelT = translate(mat4(1.0), vec3(xEarth, 0.0, zEarth));
-	//ModelT2 = translate(mat4(1.0), vec3(1, 0.0, 1));
-
-	//Model = ModelT * ModelR * ModelT2 * ModelS;		
-
-	//moon->Model = Model;
-
-	//moon->draw();
-
-	//calculate moon orbit
-	//ModelT = translate(mat4(1.0f), vec3(xEarth, 0.0, zEarth));		//fit rotation centre to earths current pos
-	//ModelR3 = rotate(mat4(1.0f), 0.0872665f, vec3(0.0f, 0.0f, 1.0f));		//tilt of 5 degrees; 0,0872665 = 5deg
+	//moon Orbit
 	ModelS = scale(mat4(1.0f), vec3(orbitRadius, orbitRadius, 0));
 	ModelR2 = rotate(mat4(1.0f), (float)M_PI / 2, vec3(1.0f, 0.0f, 0.0f));
 
@@ -272,50 +250,72 @@ void Planets() {
 	moonOrbit->Model = Model;
 
 	//draw them, make sure to draw orbits before spheres
-	moonOrbit->setColor(orbitColor);
 	moonOrbit->draw(false, GL_LINES);
-
+	//--------------------------------------------------------------------------------------------------------
 	//sun
-	//ModelS = scale(mat4(1.0), vec3(4.0f, 4.0f, 4.0f));
-	ModelS = scale(mat4(1.0), vec3(0.7f, 0.7f, 0.7f));
-	ModelR = rotate(mat4(1.0), 0.4f * -rotationAngle, vec3(0.0, 1.0, 0.0f));
-	Model = ModelR * ModelS;
-	sun->Model = Model;
+	sun->setRotationSpeed(0.25f);	//very slow, 25 days
+	sun->setScaleParameter(0.7f);
 	sun->draw();
 
-	//test
+	//mars
+	orbitRadius = 5.5f;		//orbit around sun
 	mars->setRevolutionSpeed(686.980f);
-	mars->setRotationSpeed(365);
-	mars->setRotationAngleOffset(0.408407f);
-	mars->setScaleParameter(0.4f);
-	mars->setRadiusFromSun(7.0f);
+	mars->setRotationSpeed(5.0f);		//24h
+	mars->setRotationAngleOffset(0.439648439f);		//25,19 deg =0.439648439 radians
+	mars->setScaleParameter(earthscaleparameter * 6792.4f/ 12756.27f);		//6792.4f/ 12756.27f <=> diameter mars/diameter earth
+	mars->setRadiusFromSun(orbitRadius);
 	mars->draw();
 
+	marsOrbit->setRadiusFromSun(orbitRadius);
+	marsOrbit->draw(false, GL_LINES);
+
 	//venus
-	ModelS = scale(mat4(1.0), vec3(0.2f, 0.2f, 0.2f));
 	orbitRadius = 2.5f;		//orbit around sun
-	xzOrbitValue = orbitRadius / sqrt(2);
-	ModelS = scale(mat4(1.0), vec3(0.2f, 0.2f, 0.2f));
-	ModelR = rotate(mat4(1.0), 5* rotationAngle, vec3(0.0, 1.0, 0.0));			//venus rotates clockwise, when looked at from "north" pole 
-	ModelR2 = rotate(mat4(1.0), 365.0f / 224.0f * -rotationAngle, vec3(0.0, 1.0, 0.0));		//earth rotates at 5* angle with 365d/orbit around the sun; venus' orbit is 224d
-	ModelT = translate(mat4(1.0), vec3(xzOrbitValue, 0, xzOrbitValue));
-
-	Model = ModelR2 * ModelT * ModelR * ModelS;
-
-	venus->Model = Model;
+	venus->setRevolutionSpeed(224.701f);		//224 days for one revolution
+	venus->setRotationSpeed(0.5f);		//243 days !!!! very long
+	venus->setRotationAngleOffset(3.09551596);		//177,36 deg, also, venus rotates anticlockwise
+	venus->setScaleParameter(earthscaleparameter * 12103.6f / 12756.27f);		// <=> diameter venus/diameter earth
+	venus->setRadiusFromSun(orbitRadius);
 	venus->draw();
 
-	//venus Orbit
-	ModelS = scale(mat4(1.0f), vec3(orbitRadius, orbitRadius, 0));
-	ModelR = rotate(mat4(1.0f), (float)M_PI / 2, vec3(1.0f, 0.0f, 0.0f));
-
-	Model = ModelR * ModelS;
-	venusOrbit->Model = Model;
+	venusOrbit->setRadiusFromSun(orbitRadius);
 	venusOrbit->draw(false, GL_LINES);
 
 	//mercury
+	orbitRadius = 1.0f;		//orbit around sun
+	mercury->setRevolutionSpeed(87.969);		//87 d for revolution
+	mercury->setRotationSpeed(1.5f);		//58 d -> slow
+	mercury->setRotationAngleOffset(0.00059341195);		
+	mercury->setScaleParameter(earthscaleparameter * 4879.4f / 12756.27f);		// <=> diameter mercury/diameter earth
+	mercury->setRadiusFromSun(orbitRadius);
+	mercury->draw();
 
+	mercuryOrbit->setRadiusFromSun(orbitRadius);
+	mercuryOrbit->draw(false, GL_LINES);
 
+	//jupiter
+	orbitRadius = 8.0f;		//orbit around sun
+	jupiter->setRevolutionSpeed(3.0f*365.256f);		//11y, 315d, just made it slow-ish
+	jupiter->setRotationSpeed(8.0f);		//9h 55 min -> faster than earth
+	jupiter->setRotationAngleOffset(0.05462881f);
+	jupiter->setScaleParameter(earthscaleparameter * 2);		// 142984.0f, would be too huge
+	jupiter->setRadiusFromSun(orbitRadius);
+	jupiter->draw();
+
+	jupiterOrbit->setRadiusFromSun(orbitRadius);
+	jupiterOrbit->draw(false, GL_LINES);
+
+	//saturn
+	orbitRadius = 11.0f;		//orbit around sun
+	saturn->setRevolutionSpeed(4.0f * 365.256f);		//29.5y, just made it slow- ish
+	saturn->setRotationSpeed(8.0f);		//10 h 33 min -> faster than earth
+	saturn->setRotationAngleOffset(0.46652651f);
+	saturn->setScaleParameter(earthscaleparameter * 2);		// <would be too huge
+	saturn->setRadiusFromSun(orbitRadius);
+	saturn->draw();
+
+	saturnOrbit->setRadiusFromSun(orbitRadius);
+	saturnOrbit->draw(false, GL_LINES);
 }
 
 void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND Sphere* sphere = new Sphere(1, 30, 30); are required; Sphere Parameters do not matter, as long as Radius equals 1
@@ -565,10 +565,10 @@ void display(void) {
 	if (PLANETS) {
 		Planets();
 	}
-	// Enable depth test
-	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS);
+	//// Enable depth test
+	//glEnable(GL_DEPTH_TEST);
+	//// Accept fragment if it closer to the camera than the former one
+	//glDepthFunc(GL_LESS);
 	glFlush();	
 }
 
