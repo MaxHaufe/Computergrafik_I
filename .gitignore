@@ -5,6 +5,7 @@
 !Shape.h
 !Sphere.h
 !Camera.h
+!Planet.h
 !beleg.fs
 !beleg.vs
 !Circle.cpp
@@ -14,3 +15,4 @@
 !Shape.cpp
 !Sphere.cpp
 !Camera.cpp
+!Planet.cpp
