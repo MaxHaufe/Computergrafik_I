@@ -6,6 +6,7 @@
 !Sphere.h
 !Camera.h
 !Planet.h
+!Orbit.h
 !beleg.fs
 !beleg.vs
 !Circle.cpp
@@ -16,3 +17,4 @@
 !Sphere.cpp
 !Camera.cpp
 !Planet.cpp
+!Orbit.cpp
