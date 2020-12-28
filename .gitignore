@@ -7,6 +7,8 @@
 !Camera.h
 !Planet.h
 !Orbit.h
+!Rectangle.h
+!Ring.h
 !beleg.fs
 !beleg.vs
 !Circle.cpp
@@ -18,3 +20,5 @@
 !Camera.cpp
 !Planet.cpp
 !Orbit.cpp
+!Rectangle.cpp
+!Ring.cpp
