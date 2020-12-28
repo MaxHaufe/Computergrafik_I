@@ -26,6 +26,8 @@
 #include "Circle.h"
 #include "Planet.h"
 #include "Orbit.h"
+#include "Ring.h"
+#include "Rectangle.h"
 
 #define DIFFUSE_LIGHTNING 1
 #define PLANETS 1
@@ -79,13 +81,15 @@ Sphere* sphere = new Sphere();
 
 Sphere* moon = new Sphere(1, 100, 100);
 
-Planet* sun = new Planet(1, 200, 200);
+Planet* sun = new Planet(1, 300, 300);
 Planet* jupiter = new Planet(1, 200, 200);
 Planet* earth = new Planet(1, 100, 100);
 Planet* venus = new Planet(1, 100, 100);
 Planet* mercury = new Planet(1, 100, 100);
 Planet* mars = new Planet(1.0f, 100, 100);
 Planet* saturn = new Planet(1.0f, 100, 100);
+Planet* uranus = new Planet(1.0f, 100, 100);
+Planet* neptune = new Planet(1.0f, 100, 100);
 
 Circle* moonOrbit = new Circle(1, 100);
 Circle* electronShell = new Circle(1,100);
@@ -96,10 +100,16 @@ Orbit* mercuryOrbit = new Orbit(1, 100);
 Orbit* marsOrbit = new Orbit(1, 100);
 Orbit* jupiterOrbit = new Orbit(1, 100);
 Orbit* saturnOrbit = new Orbit(1, 100);
+Orbit* uranusOrbit = new Orbit(1, 100);
+Orbit* neptuneOrbit = new Orbit(1, 100);
+
+Ring* saturnRing = new Ring(0.5f, 300);
+
+RectangleBackground* background = new RectangleBackground(1.0f,1.0f);
 
 
-std::vector<Shape*> celestials = { sun,moon,earth,venus,mercury, mars, jupiter, saturn};
-std::vector<Shape*> orbits = { earthOrbit, moonOrbit, venusOrbit, mercuryOrbit, marsOrbit,jupiterOrbit, saturnOrbit };
+std::vector<Shape*> celestials = { sun,moon,earth,venus,mercury, mars, jupiter, saturn, uranus, neptune, background};
+std::vector<Shape*> orbits = { earthOrbit, moonOrbit, venusOrbit, mercuryOrbit, marsOrbit,jupiterOrbit, saturnOrbit, saturnRing, uranusOrbit, neptuneOrbit };
 
 std::vector<Shape*> solarSystem;
 
@@ -138,6 +148,11 @@ void init(void) {
 	mercury->EnableTexture("mercury.jpg");
 	jupiter->EnableTexture("jupiter.jpg");
 	saturn->EnableTexture("saturn.jpg");
+	saturnRing->EnableTexture("saturnRing.jpg");
+	uranus->EnableTexture("uranus.jpg");
+	neptune->EnableTexture("neptune.jpg");
+
+	background->EnableTexture("milkyWay.jpg");
 
 	//generate Buffers
 
@@ -157,8 +172,11 @@ void init(void) {
 
 void Planets() {
 
+	//vec3 viewPos(0.0f, 20.5f, 1.0f);
 	vec3 viewPos(0.0f, 3.5f, 10.0f);
-	vec3 orbitColor = vec3(166.0f / 255.0f, 166.0f / 255.0f, 166.0f / 255.0f);
+	//vec3 orbitColor = vec3(166.0f / 255.0f, 166.0f / 255.0f, 166.0f / 255.0f);
+	//vec3 orbitColor = vec3(88.0f / 255.0f, 88.0f / 255.0f, 88.0f / 255.0f);
+	vec3 orbitColor = vec3(88.0f / 255.0f);
 
 	sun->material.ambient = vec3(1, 1, 1);		//make sun bright
 
@@ -179,12 +197,13 @@ void Planets() {
 	//Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -5.0f, 20.0f);									//GEHT AUCHs
 	//Projection = frustum(-5.0f, 5.0f, -5.0f, 5.0f, 4.0f, 25.0f);												//FUNKTIONIERT !!!!!!!!!!!
 	float aspect = (float)width / (float)height;
-	Projection = perspective(45.0f, float(width) / float(height), 0.0001f, 30.0f);
+	Projection = perspective(45.0f, float(width) / float(height), 0.0001f, 40.0f);
 	//Projection = ortho(-aspect, aspect,(float) -1, (float)1, (float)-1, (float)1); // geht glaub
 	//Projection = glm::perspective(aspect, 1.0f, 3.5f, -0.5f);	//EINFACH MAL NCIHT MACHEN
 
 	for (int i = 0; i < solarSystem.size();i++) {		//set all Projections and viewPos
 		solarSystem[i]->setViewPos(viewPos);
+		//solarSystem[i]->setViewDir(vec3(3,0,0));			//-3 for x on LightPos!!!!!!!
 		solarSystem[i]->Projection = Projection;
 	}
 
@@ -201,7 +220,7 @@ void Planets() {
 	float earthscaleparameter = 0.4f;
 
 	//calculate earth and its rotation
-	float orbitRadius = 4;
+	float orbitRadius = 2.9f;
 	float xzOrbitValue = orbitRadius / sqrt(2);		//x = z; r = sqrt(x^2 + z^2); r = sqrt(2 * x^2); x = r/sqrt(2);
 	float earthOrbitVal = xzOrbitValue;		//for the translation of the moon orbit
 	
@@ -258,7 +277,7 @@ void Planets() {
 	sun->draw();
 
 	//mars
-	orbitRadius = 5.5f;		//orbit around sun
+	orbitRadius = 4.0f;		//orbit around sun
 	mars->setRevolutionSpeed(686.980f);
 	mars->setRotationSpeed(5.0f);		//24h
 	mars->setRotationAngleOffset(0.439648439f);		//25,19 deg =0.439648439 radians
@@ -270,7 +289,7 @@ void Planets() {
 	marsOrbit->draw(false, GL_LINES);
 
 	//venus
-	orbitRadius = 2.5f;		//orbit around sun
+	orbitRadius = 1.7f;		//orbit around sun
 	venus->setRevolutionSpeed(224.701f);		//224 days for one revolution
 	venus->setRotationSpeed(0.5f);		//243 days !!!! very long
 	venus->setRotationAngleOffset(3.09551596);		//177,36 deg, also, venus rotates anticlockwise
@@ -294,7 +313,7 @@ void Planets() {
 	mercuryOrbit->draw(false, GL_LINES);
 
 	//jupiter
-	orbitRadius = 8.0f;		//orbit around sun
+	orbitRadius = 5.5f;		//orbit around sun
 	jupiter->setRevolutionSpeed(3.0f*365.256f);		//11y, 315d, just made it slow-ish
 	jupiter->setRotationSpeed(8.0f);		//9h 55 min -> faster than earth
 	jupiter->setRotationAngleOffset(0.05462881f);
@@ -306,8 +325,8 @@ void Planets() {
 	jupiterOrbit->draw(false, GL_LINES);
 
 	//saturn
-	orbitRadius = 11.0f;		//orbit around sun
-	saturn->setRevolutionSpeed(4.0f * 365.256f);		//29.5y, just made it slow- ish
+	orbitRadius = 7.5f;		//orbit around sun
+	saturn->setRevolutionSpeed(4 * 365.256f);		//29.5y, just made it slow- ish
 	saturn->setRotationSpeed(8.0f);		//10 h 33 min -> faster than earth
 	saturn->setRotationAngleOffset(0.46652651f);
 	saturn->setScaleParameter(earthscaleparameter * 2);		// <would be too huge
@@ -316,6 +335,38 @@ void Planets() {
 
 	saturnOrbit->setRadiusFromSun(orbitRadius);
 	saturnOrbit->draw(false, GL_LINES);
+
+	saturnRing->setRevolutionSpeed(4 * 365.256f);		
+	saturnRing->setRotationAngleOffset(0.46652651f);
+	saturnRing->setScaleParameter(earthscaleparameter * 5);		
+	saturnRing->setRadiusFromSun(orbitRadius);
+	saturnRing->draw();
+
+	//uranus
+	orbitRadius = 9.0f;		//orbit around sun
+	uranus->setRevolutionSpeed(6 * 365.256f);		//84y, just made it slow- ish
+	uranus->setRotationSpeed(6.0f);		//	17 h 14 min 24 s -> faster than earth
+	uranus->setRotationAngleOffset(1.70640841f);
+	uranus->setScaleParameter(earthscaleparameter * 1.2f);		// would be too huge
+	uranus->setRadiusFromSun(orbitRadius);
+	uranus->draw();
+
+	uranusOrbit->setRadiusFromSun(orbitRadius);
+	uranusOrbit->draw(false, GL_LINES);
+
+	//neptune
+	orbitRadius = 10.0f;		//orbit around sun
+	neptune->setRevolutionSpeed(7 * 365.256f);		//164,79y , just made it slow- ish
+	neptune->setRotationSpeed(6.0f);		//	15 h 57 min 59 s -> faster than earth
+	neptune->setRotationAngleOffset(0.494277244f);
+	neptune->setScaleParameter(earthscaleparameter * 1.3f);		// would be too huge
+	neptune->setRadiusFromSun(orbitRadius);
+	neptune->draw();
+
+	neptuneOrbit->setRadiusFromSun(orbitRadius);
+	neptuneOrbit->draw(false, GL_LINES);
+
+	//background->draw();
 }
 
 void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND Sphere* sphere = new Sphere(1, 30, 30); are required; Sphere Parameters do not matter, as long as Radius equals 1
@@ -551,6 +602,23 @@ void display(void) {
 
 	glViewport(0, 0, width, height);
 
+	background->material.ambient = vec3(1.0f);
+	background->material.specular = vec3(0.0f);
+	background->material.diffuse = vec3(0.0f);
+
+	background->setViewPos(vec3(0, 0, 1));
+	ModelT = translate(mat4(1.0f), vec3(0, 0, -100));
+
+	Projection = ortho(-1, 1, -1, 1,1,2);
+
+	background->Projection = Projection;
+
+	glDisable(GL_DEPTH_TEST);
+
+	background->draw();
+
+	glEnable(GL_DEPTH_TEST);
+
 	Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 20.0f);										//GEHT AUCH	//atommodell
 	//Projection = frustum(-2.f, 2.f, -2.f, 2.f, 2.f, -2.f);												//FUNKTIONIERT !!!!!!!!!!!
 	float aspect = (float)width / (float)height;
@@ -581,7 +649,7 @@ void reshape(int w, int h) {
 int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH);
-	glutInitWindowSize(1080, 1080);
+	glutInitWindowSize(1440, 2560);
 	glutInitContextVersion(4, 5);  // (4,2) (3,3);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 	//GLUT_COMPATIBILITY_PROFILE

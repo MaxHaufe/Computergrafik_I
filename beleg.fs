@@ -49,8 +49,9 @@ void main() {
 	if (textureEnabled == 1.0f){
 		//fColor = texture2D(tex,fTexCoord);
 		vec3 text = texture2D(tex,fTexCoord).rgb;
-		vec3 rgb=min(text.rgb*scatteredLight+reflectedLight,vec3(1.0));
+		vec3 rgb=min(text.rgb*scatteredLight+reflectedLight,vec3(1.0,1.0,1.0));
 		fColor=vec4(rgb,texture2D(tex,fTexCoord).a);
+		//fColor  = vec4(fTexCoord, 1,0);
 	}
 	else{
 		//fColor = texture2D(tex,fTexCoord);
