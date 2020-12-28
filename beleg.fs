@@ -20,6 +20,7 @@ uniform vec3 LightPosition;
 uniform vec3 EyeDirection; 
 uniform sampler2D tex;
 uniform float textureEnabled;
+uniform float pointLightEnable;
 
 //vec3 EyeDirection =  vec3(0.0f, 3.5f, 10.0f) * vec3(Position);		//hardcoded temporary EyeDirection
 
@@ -32,8 +33,15 @@ void main() {
 	float LinearAttenuation = 0;
 	float QuadraticAttenuation = 0;
 
-	vec3 lightDirection=normalize(LightPosition-vec3(Position));	//point
-	//vec3 lightDirection=normalize(LightPosition);	//diffuse
+	vec3 lightDirection;
+
+	if (pointLightEnable == 1.0f){
+		lightDirection=normalize(LightPosition-vec3(Position));	//point
+	}
+	else{
+		lightDirection=normalize(LightPosition);	//diffuse
+	}
+
 	float lightDistance=length(lightDirection);
 
 	float attenuation=1.0/(ConstantAttenuation+LinearAttenuation*lightDistance+QuadraticAttenuation*lightDistance*lightDistance);

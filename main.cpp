@@ -173,7 +173,7 @@ void init(void) {
 void Planets() {
 
 	//vec3 viewPos(0.0f, 20.5f, 1.0f);
-	vec3 viewPos(0.0f, 3.5f, 10.0f);
+	vec3 viewPos(5.0f, 3.5f, 10.0f);
 	//vec3 orbitColor = vec3(166.0f / 255.0f, 166.0f / 255.0f, 166.0f / 255.0f);
 	//vec3 orbitColor = vec3(88.0f / 255.0f, 88.0f / 255.0f, 88.0f / 255.0f);
 	vec3 orbitColor = vec3(88.0f / 255.0f);
@@ -564,29 +564,29 @@ void display(void) {
 
 	//vec3 viewPos(0.0f, 0.0f, 10.0f);		
 
-	if (DIFFUSE_LIGHTNING) {
-		vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
-		//vec3 LightColor = vec3(0.5f, 0.5f, 0.5f);
-		//vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
-		vec3 LightPosition = vec3(0.0f, 0.0f, -10.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
-		//vec3 LightPosition = viewPos;
+	//if (DIFFUSE_LIGHTNING) {
+	//	vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
+	//	//vec3 LightColor = vec3(0.5f, 0.5f, 0.5f);
+	//	//vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
+	//	vec3 LightPosition = vec3(0.0f, 0.0f, -10.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
+	//	//vec3 LightPosition = viewPos;
 
-		GLuint locColor = glGetUniformLocation(program, "LightColor");
-		GLuint locLight = glGetUniformLocation(program, "LightPosition");
+	//	GLuint locColor = glGetUniformLocation(program, "LightColor");
+	//	GLuint locLight = glGetUniformLocation(program, "LightPosition");
 
-		glUniform3fv(locColor, 1, &LightColor[0]);
-		glUniform3fv(locLight, 1, &LightPosition[0]);
-	}
-	else {
-		vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
-		vec3 LightPosition = vec3(0, 0, 0);
+	//	glUniform3fv(locColor, 1, &LightColor[0]);
+	//	glUniform3fv(locLight, 1, &LightPosition[0]);
+	//}
+	//else {
+	//	vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
+	//	vec3 LightPosition = vec3(0, 0, 0);
 
-		GLuint locColor = glGetUniformLocation(program, "LightColor");
-		GLuint locLight = glGetUniformLocation(program, "LightPosition");
+	//	GLuint locColor = glGetUniformLocation(program, "LightColor");
+	//	GLuint locLight = glGetUniformLocation(program, "LightPosition");
 
-		glUniform3fv(locColor, 1, &LightColor[0]);
-		glUniform3fv(locLight, 1, &LightPosition[0]);
-	}
+	//	glUniform3fv(locColor, 1, &LightColor[0]);
+	//	glUniform3fv(locLight, 1, &LightPosition[0]);
+	//}
 	
 
 

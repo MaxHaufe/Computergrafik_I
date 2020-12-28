@@ -12,9 +12,29 @@ void Shape::pushMatrices() {
 
 	//uniform eye direc
 	glm::vec3 EyeDirection = this->getViewPos() - this->getViewDir();
-	GLuint locColor = glGetUniformLocation(program, "EyeDirection");
+	GLuint locEye = glGetUniformLocation(program, "EyeDirection");
 
-	glUniform3fv(locColor, 1, &EyeDirection[0]);
+	glUniform3fv(locEye, 1, &EyeDirection[0]);
+
+	//uniform light
+
+	if (this->pointLightEnabled) {
+		GLuint pointLightEnable = glGetUniformLocation(program, "pointLightEnable");
+		glUniform1f(pointLightEnable, 1.0f);
+		glm::vec3 lightLocation = glm::vec3(0.0f, 0.0f, -length(this->getViewPos()));			//make light source be in the origin (sun)
+	}
+	else {
+		GLuint pointLightEnable = glGetUniformLocation(program, "pointLightEnable");
+		glUniform1f(pointLightEnable, 0.0f);
+	}
+
+	GLuint locColor = glGetUniformLocation(program, "LightColor");
+	GLuint locLight = glGetUniformLocation(program, "LightPosition");
+
+	glUniform3fv(locColor, 1, &this->lightColor[0]);
+	glUniform3fv(locLight, 1, &this->lightLocation[0]);
+
+	//MVP and stuff
 
 	glm::mat3 NormalMatrix;
 	glm::mat4 ModelView;

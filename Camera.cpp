@@ -29,4 +29,3 @@ void Camera::setViewUp(glm::vec3 viewUp)
 {
     this->viewUp = viewUp;
 }
-
