@@ -62,6 +62,12 @@ GLfloat rotationAngle = 0.0;
 
 GLfloat rotationIncrement = 0.009;		//*2, slowed down to 30fps from 60, nvm
 
+GLfloat kposx = 0.0;
+GLfloat kposy = 0.0;
+GLint mposx, mposy;
+
+GLfloat alpha = 0.2, beta = 0.9, dist = 10, DELTA = 0.5;
+
 
 void timer(int value) {
 
@@ -81,9 +87,9 @@ Sphere* sphere = new Sphere();
 
 Sphere* moon = new Sphere(1, 100, 100);
 
-Planet* sun = new Planet(1, 300, 300);
+Planet* sun = new Planet(1, 200, 200);
 Planet* jupiter = new Planet(1, 200, 200);
-Planet* earth = new Planet(1, 100, 100);
+Planet* earth = new Planet(1, 300, 300);
 Planet* venus = new Planet(1, 100, 100);
 Planet* mercury = new Planet(1, 100, 100);
 Planet* mars = new Planet(1.0f, 100, 100);
@@ -173,7 +179,15 @@ void init(void) {
 void Planets() {
 
 	//vec3 viewPos(0.0f, 20.5f, 1.0f);
-	vec3 viewPos(5.0f, 3.5f, 10.0f);
+	//vec3 viewPos(0.0f, 3.5f, 10.0f);
+
+	GLfloat viewpoint[3];
+	viewpoint[0] = dist * sin(beta) * sin(alpha);
+	viewpoint[1] = dist * cos(beta);
+	viewpoint[2] = dist * sin(beta) * cos(alpha);
+
+	vec3 viewPos = vec3(viewpoint[0], viewpoint[1], viewpoint[2]);
+
 	//vec3 orbitColor = vec3(166.0f / 255.0f, 166.0f / 255.0f, 166.0f / 255.0f);
 	//vec3 orbitColor = vec3(88.0f / 255.0f, 88.0f / 255.0f, 88.0f / 255.0f);
 	vec3 orbitColor = vec3(88.0f / 255.0f);
@@ -640,6 +654,39 @@ void display(void) {
 	glFlush();	
 }
 
+void keyboard(unsigned char theKey, int mouseX, int mouseY) {
+	GLint x = mouseX;
+	GLint y = height - mouseY;
+	switch (theKey) {
+	case 'v': dist -= DELTA; display(); break;
+	case 'z': dist += DELTA; display(); break;
+	case 'e': exit(-1);
+	}
+}
+
+void mouse(int theButton, int State, int mouseX, int mouseY) {
+	GLint x = mouseX; GLint y = height - mouseY;
+}
+
+void motion(int mouseX, int mouseY) {
+	if (mouseX < (width / 2)) { alpha -= (mouseX - (width / 2)) / 10000.0; }
+	else { alpha -= (mouseX - (width / 2)) / 10000.0; }
+	if (mouseY < (height / 2)) { beta -= (mouseY - (height / 2)) / 10000.0; }
+	else { beta -= (mouseY - (height / 2)) / 10000.0; }
+	display();
+}
+
+void special(int specKey, int mouseX, int mouseY) {
+	GLint x = mouseX;
+	GLint y = height - mouseY;
+	switch (specKey) {
+	case GLUT_KEY_LEFT: alpha -= DELTA; display(); break;
+	case GLUT_KEY_RIGHT: alpha += DELTA; display(); break;
+	case GLUT_KEY_UP: beta -= DELTA; display(); break;
+	case GLUT_KEY_DOWN: display(); beta += DELTA; break;
+	}
+}
+
 void reshape(int w, int h) {
 	width = w;
 	height = h;
@@ -663,5 +710,9 @@ int main(int argc, char** argv) {
 
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
+	glutSpecialFunc(special);
+	glutKeyboardFunc(keyboard);
+	glutMouseFunc(mouse);
+	glutMotionFunc(motion);
 	glutMainLoop();
 }

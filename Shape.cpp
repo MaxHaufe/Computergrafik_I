@@ -19,9 +19,11 @@ void Shape::pushMatrices() {
 	//uniform light
 
 	if (this->pointLightEnabled) {
+		glm::vec3 pos = this->getViewPos();
 		GLuint pointLightEnable = glGetUniformLocation(program, "pointLightEnable");
 		glUniform1f(pointLightEnable, 1.0f);
 		glm::vec3 lightLocation = glm::vec3(0.0f, 0.0f, -length(this->getViewPos()));			//make light source be in the origin (sun)
+		this->lightLocation = lightLocation;
 	}
 	else {
 		GLuint pointLightEnable = glGetUniformLocation(program, "pointLightEnable");
