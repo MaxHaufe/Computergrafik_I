@@ -36,18 +36,18 @@ void main() {
 	vec3 lightDirection;
 
 	if (pointLightEnable == 1.0f){
-		lightDirection=normalize(LightPosition-vec3(Position));	//point
+		lightDirection=LightPosition-vec3(Position);	//point
 	}
 	else{
-		lightDirection=normalize(LightPosition);	//diffuse
+		lightDirection=LightPosition;	//diffuse
 	}
 
 	float lightDistance=length(lightDirection);
 
 	float attenuation=1.0/(ConstantAttenuation+LinearAttenuation*lightDistance+QuadraticAttenuation*lightDistance*lightDistance);
 
-	float diffuse=max(0.0,dot(Normal,lightDirection));
-	vec3 halfVector=normalize(lightDirection+normalize(EyeDirection));
+	float diffuse=max(0.0,dot(Normal,normalize(lightDirection)));
+	vec3 halfVector=normalize(normalize(lightDirection)+normalize(EyeDirection));
 	float specular=max(0.0,dot(Normal,halfVector));
 	if (diffuse==0.0) specular=0.0; else specular=pow(specular,material.shininess);
 	vec3 scatteredLight=material.ambient+material.diffuse*(LightColor*diffuse)*attenuation;

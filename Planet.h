@@ -11,7 +11,7 @@ private:
     float revolutionSpeed = 365.256f; //nr in days to do a full circle around the sun
     float rotationSpeed = 365.256f;		//nr of days to do a full rotation around own axis
     float rotationAngleOffset = 0.0f;		//tilt of the axis
-    bool antiClockwiseRotation = true;		//earth rotates anticlockwise, venus doesn't
+    bool grows = false;		//earth rotates anticlockwise, venus doesn't
 public:
 
     using Sphere::Sphere;       //inherit sphere constructor
@@ -33,9 +33,8 @@ public:
     float getRotationAngleOffset() const;
     void setRotationAngleOffset(float rotationAngleOffset);
 
-    bool getAntiClockwiseRotation() const;
-    void setAntiClockwiseRotation(bool antiClockwiseRotation);
+    bool getGrows() const;
+    void setGrows(bool grows);
 
 };
-
 #endif;

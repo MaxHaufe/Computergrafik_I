@@ -38,9 +38,6 @@
 #define SHELLS 1
 #define RANDOMELECTRONS 1
 
-//messing around
-#define PAULA 0
-
 
 using namespace glm;
 
@@ -50,6 +47,7 @@ GLuint loadShaders(const char* vertexFilePath,
 	const char* tesscontrolFilePath,
 	const char* tessevaluationFilePath,
 	const char* computeFilePath);
+void redGiant();
 GLint height = 100, width = 100;
 enum VAO_IDs { VAOCube, NumVAOs };
 enum Buffer_IDs { VertexBuffer, ColorBuffer, NormalBuffer, ArrayBufferCube, ColorBufferCube, NormalBufferCube, TextureBuffer, NumBuffers };
@@ -87,7 +85,7 @@ Sphere* sphere = new Sphere();
 
 Sphere* moon = new Sphere(1, 100, 100);
 
-Planet* sun = new Planet(1, 200, 200);
+Planet* sun = new Planet(1, 500, 500);
 Planet* jupiter = new Planet(1, 200, 200);
 Planet* earth = new Planet(1, 300, 300);
 Planet* venus = new Planet(1, 100, 100);
@@ -114,7 +112,7 @@ Ring* saturnRing = new Ring(0.5f, 300);
 RectangleBackground* background = new RectangleBackground(1.0f,1.0f);
 
 
-std::vector<Shape*> celestials = { sun,moon,earth,venus,mercury, mars, jupiter, saturn, uranus, neptune, background};
+std::vector<Shape*> celestials = { sun,moon,earth,venus,mercury, mars, jupiter, saturn, uranus, neptune};
 std::vector<Shape*> orbits = { earthOrbit, moonOrbit, venusOrbit, mercuryOrbit, marsOrbit,jupiterOrbit, saturnOrbit, saturnRing, uranusOrbit, neptuneOrbit };
 
 std::vector<Shape*> solarSystem;
@@ -135,8 +133,14 @@ void init(void) {
 		solarSystem.push_back(orbits[i]);
 	}
 
+	for (int i = 0;i < celestials.size();i++) {		//disable reflections on all celestial bodies
+		celestials[i]->material.specular = vec3(0, 0, 0);
+	}
+
 	//ugly image stuff, TODO
 	FreeImage_Initialise(TRUE);
+
+	sun->material.ambient = vec3(1, 1, 1);		//make sun bright
 
 	moon->EnableTexture("moon.jpg");
 	sun->EnableTexture("sun.jpg");
@@ -157,7 +161,7 @@ void init(void) {
 	saturnRing->EnableTexture("saturnRing.jpg");
 	uranus->EnableTexture("uranus.jpg");
 	neptune->EnableTexture("neptune.jpg");
-
+	
 	background->EnableTexture("milkyWay.jpg");
 
 	//generate Buffers
@@ -176,6 +180,14 @@ void init(void) {
 
 
 
+float redGiantIncrement = 0;
+bool redGiantEnabled = false;
+
+void redGiant() {
+	sun->setGrows(true);
+}
+
+
 void Planets() {
 
 	//vec3 viewPos(0.0f, 20.5f, 1.0f);
@@ -192,7 +204,7 @@ void Planets() {
 	//vec3 orbitColor = vec3(88.0f / 255.0f, 88.0f / 255.0f, 88.0f / 255.0f);
 	vec3 orbitColor = vec3(88.0f / 255.0f);
 
-	sun->material.ambient = vec3(1, 1, 1);		//make sun bright
+
 
 	mat4 Projection = mat4(1.0);
 	mat4 Model = mat4(1.0);
@@ -219,10 +231,6 @@ void Planets() {
 		solarSystem[i]->setViewPos(viewPos);
 		//solarSystem[i]->setViewDir(vec3(3,0,0));			//-3 for x on LightPos!!!!!!!
 		solarSystem[i]->Projection = Projection;
-	}
-
-	for (int i = 0;i < celestials.size();i++) {		//disable reflections on all celestial bodies
-		celestials[i]->material.specular = vec3(0, 0, 0);
 	}
 
 	for (int i = 0;i < orbits.size();i++) {
@@ -282,12 +290,23 @@ void Planets() {
 	Model = ModelR * ModelT * ModelR2* ModelS;
 	moonOrbit->Model = Model;
 
-	//draw them, make sure to draw orbits before spheres
 	moonOrbit->draw(false, GL_LINES);
 	//--------------------------------------------------------------------------------------------------------
 	//sun
+
+	if (sun->getGrows()) {
+		sun->setScaleParameter(sun->getScaleParameter()-0.3f + 0.31f);
+		sun->material.ambient = vec3(1.0f, sun->material.ambient.y - 0.002f, sun->material.ambient.z - 0.002f);
+	}
+	else {
+		sun->setScaleParameter(0.7f);
+	}
+
+	if (sun->getScaleParameter() > 10.0f) {
+		exit(2);
+	}
 	sun->setRotationSpeed(0.25f);	//very slow, 25 days
-	sun->setScaleParameter(0.7f);
+
 	sun->draw();
 
 	//mars
@@ -379,8 +398,6 @@ void Planets() {
 
 	neptuneOrbit->setRadiusFromSun(orbitRadius);
 	neptuneOrbit->draw(false, GL_LINES);
-
-	//background->draw();
 }
 
 void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND Sphere* sphere = new Sphere(1, 30, 30); are required; Sphere Parameters do not matter, as long as Radius equals 1
@@ -403,11 +420,16 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 
 	glViewport(0, 0, width, height);
 
-	Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 15.0f);
+	Projection = ortho((float)width / (float)height * -5.0f, (float)width/(float)height*5.0f, -5.0f, 5.0f, 5.0f, 15.0f);
+	//Projection = perspective(45.0f, float(width) / float(height), 0.0001f, 40.0f);
+
+	sphere->Projection = Projection;
+	electronShell->Projection = Projection;
+	electronShell->material.ambient = vec3(1.0f);
 
 	//draw the core, i.e. neutrons and protons
 	if (CORE) {	
-		sphere->Projection = Projection;
+		//sphere->Projection = Projection;
 		ModelS = scale(ModelS, vec3(0.3f, 0.3f, 0.3f));
 
 		vec3 red = vec3(1.0f, 0.0f, 0.0f);
@@ -503,12 +525,16 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 	//draw Shells
 	float electronShellAngle = 3 * M_PI / 7;		//rotate circle on xz to make it elliptic
 	float electronShellAngleY = M_PI / 6;			//rotating increment to make 6 shells
-	electronShell->Projection = Projection;
+	//electronShell->Projection = Projection;
 
 	ModelS = mat4(1.0);
-	ModelS = scale(ModelS, vec3(4.0f, 4.0f, 4.0f));
+	ModelS = scale(ModelS, vec3(4.0f));
 
+	ModelR = rotate(mat4(1.0f), 3.0f / 7.0f * (float)M_PI,vec3(0.0f, 1.0f, 0.0f));
 	
+	electronShell->Model =  ModelS;
+	//electronShell->draw(false, GL_LINES);
+
 	if (SHELLS) {
 		for (int i = 0; i < 6;i++) {
 			vec3 EulerAngles(0, electronShellAngle, i * electronShellAngleY);
@@ -518,11 +544,17 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 			ModelR = toMat4(MyQuaternion);
 
 			Model = ModelR * ModelS;
+
+			electronShell->setColor(vec3(0.0f));
 			electronShell->Model = Model;
 
-			electronShell->draw();
+			electronShell->draw(false,GL_LINES);
 		}
 	} 
+
+	moonOrbit->Projection = Projection;
+	moonOrbit->Model = mat4(1.0f);
+	moonOrbit->draw(false, GL_LINE);
 
 	//draw electrons
 	Model = mat4(1.0);
@@ -533,7 +565,7 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 
 	sphere->setColor(vec3(51.0f / 255.0f, 51.0f / 255.0f, 255.0f / 255.0f));		//darker blue for electrons
 
-	sphere->Projection = Projection;
+	//sphere->Projection = Projection;
 
 	ModelS = scale(ModelS, vec3(0.3f, 0.3f, 0.3f));		//match the size of protons and neutrons
 
@@ -571,88 +603,90 @@ void CarbonAtom() {		//!!!GLOABAL!!! Circle* electronShell = new Circle(); AND S
 void display(void) {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glClearColor(0.5, 0., 0.5, 0);
-	glClearColor(0.0, 0.0, 0.0,1);
-
-
-
-	//vec3 viewPos(0.0f, 0.0f, 10.0f);		
-
-	//if (DIFFUSE_LIGHTNING) {
-	//	vec3 LightColor = vec3(1.0f, 1.0f, 1.0f);
-	//	//vec3 LightColor = vec3(0.5f, 0.5f, 0.5f);
-	//	//vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
-	//	vec3 LightPosition = vec3(0.0f, 0.0f, -10.0f);		//for point light: Multiplied with MV matrix -> light is -z value FROM VIEWPOINT!!!!!
-	//	//vec3 LightPosition = viewPos;
-
-	//	GLuint locColor = glGetUniformLocation(program, "LightColor");
-	//	GLuint locLight = glGetUniformLocation(program, "LightPosition");
-
-	//	glUniform3fv(locColor, 1, &LightColor[0]);
-	//	glUniform3fv(locLight, 1, &LightPosition[0]);
-	//}
-	//else {
-	//	vec3 LightColor = vec3(0.0f, 0.0f, 0.0f);
-	//	vec3 LightPosition = vec3(0, 0, 0);
-
-	//	GLuint locColor = glGetUniformLocation(program, "LightColor");
-	//	GLuint locLight = glGetUniformLocation(program, "LightPosition");
-
-	//	glUniform3fv(locColor, 1, &LightColor[0]);
-	//	glUniform3fv(locLight, 1, &LightPosition[0]);
-	//}
-	
-
-
-	mat4 Projection = mat4(1.0);
-	mat4 Model = mat4(1.0);
-	mat4 ModelR = mat4(1.0);
-	mat4 ModelR2 = mat4(1.0f);
-	mat4 ModelT = mat4(1.0);
-	mat4 ModelS = mat4(1.0f);
-	mat4 ModelT2 = mat4(1.0f);
-	mat4 ModelT3 = mat4(1.0f);
-	mat4 ModelT4 = mat4(1.0f);
+	glClearColor(0.5, 0., 0.5, 0);
+	//glClearColor(0.0, 0.0, 0.0,1);
 
 	glViewport(0, 0, width, height);
-
-	background->material.ambient = vec3(1.0f);
-	background->material.specular = vec3(0.0f);
-	background->material.diffuse = vec3(0.0f);
-
-	background->setViewPos(vec3(0, 0, 1));
-	ModelT = translate(mat4(1.0f), vec3(0, 0, -100));
-
-	Projection = ortho(-1, 1, -1, 1,1,2);
-
-	background->Projection = Projection;
-
-	glDisable(GL_DEPTH_TEST);
-
-	background->draw();
-
-	glEnable(GL_DEPTH_TEST);
-
-	Projection = ortho(-5.0f, 5.0f, -5.0f, 5.0f, 5.0f, 20.0f);										//GEHT AUCH	//atommodell
-	//Projection = frustum(-2.f, 2.f, -2.f, 2.f, 2.f, -2.f);												//FUNKTIONIERT !!!!!!!!!!!
-	float aspect = (float)width / (float)height;
-	//Projection = ortho(3*-aspect,3* aspect,(float) -3, (float)3, (float)3, (float)-3); // geht glaub
-	//Projection = glm::perspective(aspect, 1.0f, 3.5f, -0.5f);	//EINFACH MAL NCIHT MACHEN
+	mat4 Projection, ModelT;
 	
 	if (CARBONATOM) {
 		CarbonAtom();
 	}
 
-	//Planets lol
+	//Planets 
 	if (PLANETS) {
+		background->material.ambient = vec3(1.0f);
+		background->material.specular = vec3(0.0f);
+		background->material.diffuse = vec3(0.0f);
+
+		background->setViewPos(vec3(0, 0, 1));
+		ModelT = translate(mat4(1.0f), vec3(0, 0, -100));
+
+		Projection = ortho(-1, 1, -1, 1, 1, 2);
+
+		background->Projection = Projection;
+
+		glDisable(GL_DEPTH_TEST);
+
+		background->draw();
+
+		glEnable(GL_DEPTH_TEST);
 		Planets();
 	}
-	//// Enable depth test
-	//glEnable(GL_DEPTH_TEST);
-	//// Accept fragment if it closer to the camera than the former one
-	//glDepthFunc(GL_LESS);
 	glFlush();	
 }
+
+bool texturesOn = true;
+void switchTextures() {
+	if (texturesOn) {
+		for (int i = 0;i < celestials.size();i++) {		
+			celestials[i]->DisableTexture();
+			float random = (float)(rand() % 10 + 1) / 10;
+			float random2 = (float)(rand() % 10 + 1) / 10;
+			float random3 = (float)(rand() % 10 + 1) / 10;
+			celestials[i]->setColor(vec3(random, random2, random3));
+			if ((float)(rand() % 10 + 1) < 5) {
+				celestials[i]->material.specular = vec3(1.0f);
+			}
+		}
+	}
+	else {
+		for (int i = 0;i < celestials.size();i++) {		//disable reflections on all celestial bodies
+			celestials[i]->material.specular = vec3(0.0f);
+		}
+		moon->EnableTexture("moon.jpg");
+		sun->EnableTexture("sun.jpg");
+		earth->EnableTexture("earthClouds3.jpg");		
+		venus->EnableTexture("venus.jpg");
+		mars->EnableTexture("mars.jpg");
+		mercury->EnableTexture("mercury.jpg");
+		jupiter->EnableTexture("jupiter.jpg");
+		saturn->EnableTexture("saturn.jpg");
+		saturnRing->EnableTexture("saturnRing.jpg");
+		uranus->EnableTexture("uranus.jpg");
+		neptune->EnableTexture("neptune.jpg");
+	}
+	texturesOn = !texturesOn;
+}
+
+
+bool spotLightOn = true;
+void switchSpotlight() {
+	if (spotLightOn) {
+		for (int i = 0;i < celestials.size();i++) {
+			celestials[i]->pointLightEnabled = false;
+			celestials[i]->lightLocation = vec3(10.0f,0.0f,0.0f);
+		}
+	}
+	else {
+		for (int i = 0;i < celestials.size();i++) {
+			celestials[i]->pointLightEnabled = true;
+		}
+	}
+	spotLightOn = !spotLightOn;
+}
+
+
 
 void keyboard(unsigned char theKey, int mouseX, int mouseY) {
 	GLint x = mouseX;
@@ -660,6 +694,9 @@ void keyboard(unsigned char theKey, int mouseX, int mouseY) {
 	switch (theKey) {
 	case 'v': dist -= DELTA; display(); break;
 	case 'z': dist += DELTA; display(); break;
+	case 't': switchTextures(); display(); break;
+	case 'l': switchSpotlight(); display(); break;
+	case 'g': redGiant(); display(); break;
 	case 'e': exit(-1);
 	}
 }

@@ -11,7 +11,8 @@ void Shape::pushMatrices() {
 	this->View = glm::lookAt(this->getViewPos(),this->getViewDir(),this->getViewUp());
 
 	//uniform eye direc
-	glm::vec3 EyeDirection = this->getViewPos() - this->getViewDir();
+	//glm::vec3 EyeDirection = this->getViewPos() - this->getViewDir();		//this is utterly wrong, just leaving as a reminder
+	glm::vec3 EyeDirection = -glm::vec3(0.0f, 0.0f, -length(this->getViewPos()));
 	GLuint locEye = glGetUniformLocation(program, "EyeDirection");
 
 	glUniform3fv(locEye, 1, &EyeDirection[0]);
@@ -19,7 +20,6 @@ void Shape::pushMatrices() {
 	//uniform light
 
 	if (this->pointLightEnabled) {
-		glm::vec3 pos = this->getViewPos();
 		GLuint pointLightEnable = glGetUniformLocation(program, "pointLightEnable");
 		glUniform1f(pointLightEnable, 1.0f);
 		glm::vec3 lightLocation = glm::vec3(0.0f, 0.0f, -length(this->getViewPos()));			//make light source be in the origin (sun)

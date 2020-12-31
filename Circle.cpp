@@ -88,7 +88,7 @@ Circle::Circle(float radius, unsigned int segments) {
 	float x1, y1, x2, y2, z, theta;
 	x1 = radius;
 	y1 = 0.0f;
-	z = -10.0f;
+	z = 0.0f;
 	theta = (M_PI * 2) / segments;
 
 	for (int i = 0; i < segments * 4; i += 4) {

@@ -93,3 +93,13 @@ void Planet::setRotationAngleOffset(float rotationAngleOffset)
     this->rotationAngleOffset = rotationAngleOffset;
 }
 
+bool Planet::getGrows() const
+{
+    return grows;
+}
+
+void Planet::setGrows(bool grows)
+{
+    this->grows = grows;
+}
+
