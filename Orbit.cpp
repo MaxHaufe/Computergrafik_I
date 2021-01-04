@@ -7,10 +7,6 @@
 
 using namespace glm;
 
-void Orbit::displayOrbit(bool enable) {
-    
-
-}
 float Orbit::getRadiusFromSun() const
 {
     return radiusFromSun;

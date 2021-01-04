@@ -81,9 +81,6 @@ Ring::Ring(float holeRadius, unsigned int segments) {
 	//also make them "immune" to our light sources
 	this->material.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->material.ambient = glm::vec3(1.0f, 1.0f, 1.0f);
-	//glm::vec3 ambient = glm::vec3(0.1f, 0.1f, 0.1f);
-	//glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-	this->material.specular = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 void Ring::draw() {

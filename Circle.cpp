@@ -112,5 +112,5 @@ Circle::Circle(float radius, unsigned int segments) {
 	//also make them "immune" to our light sources
 	this->material.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->material.ambient = glm::vec3(1.0f, 1.0f, 1.0f);
-	this->material.shininess = 3000.0f;
+	//this->material.specular = glm::vec3(0.0f);			//useless, because diffuse = 0
 }
